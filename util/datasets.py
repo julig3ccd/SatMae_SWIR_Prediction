@@ -494,6 +494,140 @@ class SentinelIndividualImageDataset(SatelliteDataset):
         return transforms.Compose(t)
 
 
+class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
+    label_types = ['value', 'one-hot']
+    mean = [1370.19151926, 1184.3824625 , 1120.77120066, 1136.26026392,
+            1263.73947144, 1645.40315151, 1846.87040806, 1762.59530783,
+            1972.62420416,  582.72633433,   14.77112979, 1732.16362238, 1247.91870117]
+    std = [633.15169573,  650.2842772 ,  712.12507725,  965.23119807,
+           948.9819932 , 1108.06650639, 1258.36394548, 1233.1492281 ,
+           1364.38688993,  472.37967789,   14.3114637 , 1310.36996126, 1087.6020813]
+
+    def __init__(self,
+                 directory_path: str,
+                 transform: Any,
+                 masked_bands: Optional[List[int]] = None,
+                 dropped_bands: Optional[List[int]] = None):
+        """
+        Creates dataset for multi-spectral single image swir prediction.
+        Usually used for fMoW-Sentinel dataset.
+        :param csv_path: path to csv file.
+        :param transform: pytorch Transform for transforms and tensor conversion
+        :param masked_bands: List of indices corresponding to which bands to mask out
+        :param dropped_bands:  List of indices corresponding to which bands to drop from input image tensor
+        """
+        super().__init__(in_c=13)
+        #self.df = pd.read_csv(csv_path) \
+         #   .sort_values(['category', 'location_id', 'timestamp'])
+
+
+        # create path strings for all tiff files in directory
+        filePaths = []
+        for file in os.listdir(directory_path):
+            if file.endswith(".tiff"):
+                filePaths.append(directory_path/file)
+      
+
+              #create df containing all file paths
+        if len(filePaths) != 0:
+            self.df = pd.DataFrame(filePaths, columns=['image_path'])
+        else:
+            raise ValueError('No tiff files found in directory');
+        
+
+        self.indices = self.df.index.unique().to_numpy()
+
+        self.transform = transform
+
+
+        self.masked_bands = masked_bands
+        self.dropped_bands = dropped_bands
+        if self.dropped_bands is not None:
+            self.in_c = self.in_c - len(dropped_bands)
+
+    def __len__(self):
+        return len(self.df)
+
+    def open_image(self, img_path):
+        with rasterio.open(img_path) as data:
+            # img = data.read(
+            #     out_shape=(data.count, self.resize, self.resize),
+            #     resampling=Resampling.bilinear
+            # )
+            img = data.read()  # (c, h, w)
+
+        return img.transpose(1, 2, 0).astype(np.float32)  # (h, w, c)
+
+    def __getitem__(self, idx):
+        """
+        Gets image (x,y) pair given index in dataset.
+        :param idx: Index of (image, label) pair in dataset dataframe. (c, h, w)
+        :return: Torch Tensor image input (bands masked), and Torch Tensor of Target Image (all bands contained).
+        """
+        selection = self.df.iloc[idx]
+        # images = [torch.FloatTensor(rasterio.open(img_path).read()) for img_path in image_paths]
+        
+        inputImages = self.open_image(selection['image_path'])  # (h, w, c)
+        #save initial loaded img with all channels
+        targetImage = inputImages;
+        #mask out bands of input image 
+        if self.masked_bands is not None:
+            #TODO decide wheather to use mean or 0 for masking
+            #inputImages[:, :, self.masked_bands] = np.array(self.mean)[self.masked_bands]
+            inputImages[:, :, self.masked_bands] = 0
+
+
+        #labels = self.categories.index(selection['category'])
+        
+        #TODO check if transformed tensor should be used for target img or not
+        inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
+        targetImage_as_tensor = self.transform(targetImage)  # (c, h, w)
+
+        if self.dropped_bands is not None:
+            keep_idxs = [i for i in range(img_as_tensor.shape[0]) if i not in self.dropped_bands]
+            img_as_tensor = img_as_tensor[keep_idxs, :, :]
+
+        sample = {
+            'inputImages': inputImages,
+            #'labels': labels,
+            'targetImage': targetImage,
+            'image_ids': selection['image_id'],
+            'timestamps': selection['timestamp']
+        }
+        return inputImg_as_tensor, targetImage_as_tensor
+
+    @staticmethod
+    def build_transform(is_train, input_size, mean, std):
+        # train transform
+        interpol_mode = transforms.InterpolationMode.BICUBIC
+
+        t = []
+        if is_train:
+            t.append(SentinelNormalize(mean, std))  # use specific Sentinel normalization to avoid NaN
+            t.append(transforms.ToTensor())
+            t.append(
+                transforms.RandomResizedCrop(input_size, scale=(0.2, 1.0), interpolation=interpol_mode),  # 3 is bicubic
+            )
+            t.append(transforms.RandomHorizontalFlip())
+            return transforms.Compose(t)
+
+        # eval transform
+        if input_size <= 224:
+            crop_pct = 224 / 256
+        else:
+            crop_pct = 1.0
+        size = int(input_size / crop_pct)
+
+        t.append(SentinelNormalize(mean, std))
+        t.append(transforms.ToTensor())
+        t.append(
+            transforms.Resize(size, interpolation=interpol_mode),  # to maintain same ratio w.r.t. 224 images
+        )
+        t.append(transforms.CenterCrop(input_size))
+
+        return transforms.Compose(t)
+
+
 class EuroSat(SatelliteDataset):
     mean = [1370.19151926, 1184.3824625, 1120.77120066, 1136.26026392,
             1263.73947144, 1645.40315151, 1846.87040806, 1762.59530783,
@@ -545,6 +679,17 @@ class EuroSat(SatelliteDataset):
 
         return img_as_tensor, label
 
+def build_own_sentinelDataSet(is_train: bool, args) -> SatelliteDataset:
+
+    mean = SentinelIndividualImageDataset.mean
+    std = SentinelIndividualImageDataset.std
+    transform = SentinelIndividualImageDataset.build_transform(is_train, args.input_size, mean, std)
+    dataset = SentinelIndividualImageDataset_OwnData(args.directory_path, transform, masked_bands=args.masked_bands,
+                                                 dropped_bands=args.dropped_bands)
+    print(dataset)
+
+    return dataset
+
 
 def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     """
@@ -567,7 +712,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
         std = SentinelIndividualImageDataset.std
         transform = SentinelIndividualImageDataset.build_transform(is_train, args.input_size, mean, std)
         dataset = SentinelIndividualImageDataset(csv_path, transform, masked_bands=args.masked_bands,
-                                                 dropped_bands=args.dropped_bands)
+                                                 dropped_bands=args.dropped_bands)   
     elif args.dataset_type == 'rgb_temporal_stacked':
         mean = FMoWTemporalStacked.mean
         std = FMoWTemporalStacked.std

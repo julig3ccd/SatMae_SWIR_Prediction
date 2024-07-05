@@ -3,8 +3,8 @@
 **[Paper](https://arxiv.org/abs/2207.08051)** | 
 **[Video](https://recorder-v3.slideslive.com/?share=75759&s=4597a5f4-7f86-4e18-a11b-fbac51cb7616)**
 
-This is the official repository for the NeurIPS 2022 paper 
-"_SatMAE: Pre-training Transformers for Temporal and Multi-Spectral Satellite Imagery_".  
+This is copy of the official repository for the NeurIPS 2022 paper 
+"_SatMAE: Pre-training Transformers for Temporal and Multi-Spectral Satellite Imagery_". for research purposes only. 
 
 Authors: 
 [Yezhen Cong](https://www.linkedin.com/in/yezhen-cong-60a449204/) <sup>1</sup>,

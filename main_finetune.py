@@ -18,7 +18,6 @@ from torch.utils.tensorboard import SummaryWriter
 
 import timm
 
-assert timm.__version__ == "0.3.2"  # version check
 from timm.models.layers import trunc_normal_
 from timm.data.mixup import Mixup
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
@@ -167,7 +166,7 @@ def get_args_parser():
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
-    parser.add_argument('--local_rank', default=os.getenv('LOCAL_RANK', 0), type=int)
+    parser.add_argument('--local-rank', default=os.getenv('LOCAL_RANK', 0), type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
@@ -436,7 +435,9 @@ def main(args):
 
 if __name__ == '__main__':
     args = get_args_parser()
+    print("got the args parser: " ,args)
     args = args.parse_args()
+    print("after parse args " ,args)
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)

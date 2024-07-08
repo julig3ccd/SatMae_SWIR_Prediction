@@ -35,10 +35,10 @@ python3 -m torch.distributed.launch --nproc_per_node=8 validate_only.py \
 --input_size 96 --patch_size 8  \
 --model_type group_c  \
 --dataset_type sentinel \
---directory_path data \
+--directory_path ~/data \
 --masked_bands 11 12 \
 --eval \
---output_dir /home/stud/geissinger/out \
---log_dir /home/stud/geissinger/log \
+--output_dir ~/out \
+--log_dir ~/log \
 
 fusermount -u ~/data

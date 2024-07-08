@@ -16,8 +16,7 @@ env
 mkdir -p ~/data
 sshfs geissinger@zandalar:/mnt/data3/CNLNG ~/data
 
-git clone https://github.com/julig3ccd/SatMae_SWIR_Prediction.git
-cd SatMae_SWIR_Prediction
+cd src/SatMae_SWIR_Prediction
 
 # venv
 source ./venv/test/bin/activate

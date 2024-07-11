@@ -13,15 +13,13 @@ nvidia-smi
 
 env
 
-mkdir -p ~/data
-sshfs geissinger@zandalar:/mnt/data3/CNLNG ~/data
-
-cd src/SatMae_SWIR_Prediction
-
 # venv
-source ./venv/test/bin/activate
+source ./venv/satmae_env/bin/activate
+
+cd ./src/SatMae_SWIR_Prediction
 # For CUDA 11, we need to explicitly request the correct version
 
+#enuser torch is available for next command
 
 # download example script for CNN training
 
@@ -34,10 +32,8 @@ python3 -m torch.distributed.launch --nproc_per_node=8 validate_only.py \
 --input_size 96 --patch_size 8  \
 --model_type group_c  \
 --dataset_type sentinel \
---directory_path ~/data \
+--directory_path /../../nfs/data3/CNLNG/ \
 --masked_bands 11 12 \
 --eval \
 --output_dir ~/out \
 --log_dir ~/log \
-
-fusermount -u ~/data

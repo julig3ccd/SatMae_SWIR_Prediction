@@ -8,7 +8,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 from util.datasets import SentinelIndividualImageDataset_OwnData
-from util.datasets import build_own_Sentineldataset, build_fmow_dataset
+from util.datasets import (build_own_Sentineldataset, build_fmow_dataset)
 import util.lr_decay as lrd
 
 import numpy as np

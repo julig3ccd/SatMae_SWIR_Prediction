@@ -679,7 +679,7 @@ class EuroSat(SatelliteDataset):
 
         return img_as_tensor, label
 
-def build_own_sentinelDataSet(is_train: bool, args) -> SatelliteDataset:
+def build_own_sentineldataset(is_train: bool, args) -> SatelliteDataset:
 
     mean = SentinelIndividualImageDataset.mean
     std = SentinelIndividualImageDataset.std

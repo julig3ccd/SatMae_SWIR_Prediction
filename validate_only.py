@@ -8,7 +8,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 from util.datasets import SentinelIndividualImageDataset_OwnData
-from util.datasets import (build_own_Sentineldataset, build_fmow_dataset)
+from util.datasets import (build_own_sentineldataset, build_fmow_dataset)
 import util.lr_decay as lrd
 
 import numpy as np
@@ -124,13 +124,15 @@ def main(args):
             args.grouped_bands = [[0, 1, 2, 6], [3, 4, 5, 7], [8, 9]]
         print(f"Grouping bands {args.grouped_bands}")
         model = models_vit_group_channels.__dict__[args.model](
-            patch_size=args.patch_size, img_size=args.input_size, in_chans=dataset_train.in_c,
+            patch_size=args.patch_size, img_size=args.input_size,
+            # in_chans=dataset_train.in_c, seems not to be used and would require dataset_train to be defined
             channel_groups=args.grouped_bands,
             num_classes=args.nb_classes, drop_path_rate=args.drop_path, global_pool=args.global_pool,
         )
     else:
         model = models_vit.__dict__[args.model](
-            patch_size=args.patch_size, img_size=args.input_size, in_chans=dataset_train.in_c,
+            patch_size=args.patch_size, img_size=args.input_size,
+                     # in_chans=dataset_train.in_c, seems not to be used and would require dataset_train to be defined
             num_classes=args.nb_classes, drop_path_rate=args.drop_path, global_pool=args.global_pool,
         )
 

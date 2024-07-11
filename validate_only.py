@@ -53,7 +53,7 @@ def main(args):
     cudnn.benchmark = True
     
     #TODO create a 2 columns in dataframe where one holds the masked bands and the other holds all bands
-    dataset_val = build_own_Sentineldataset(is_train=False, args=args)
+    dataset_val = build_own_sentineldataset(is_train=False, args=args)
     #not used anyways for now, but needs to be changed for actual training
     #dataset_train = build_fmow_dataset(is_train=True, args=args)
 

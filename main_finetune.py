@@ -126,6 +126,9 @@ def get_args_parser():
                         help='Train .csv path')
     parser.add_argument('--test_path', default='/home/val_62classes.csv', type=str,
                         help='Test .csv path')
+    #TODO set default that makes sense
+    parser.add_argument('--directory_path', default="/../../nfs/data3/CNLNG/", type=str, help='Data Directory path')
+
     parser.add_argument('--dataset_type', default='rgb', choices=['rgb', 'temporal', 'sentinel', 'euro_sat', 'naip'],
                         help='Whether to use fmow rgb, sentinel, or other dataset.')
     parser.add_argument('--masked_bands', default=None, nargs='+', type=int,
@@ -284,7 +287,7 @@ def main(args):
         #         print('Using 3 channels of ckpt patch_embed')
         #         model.patch_embed.proj.weight.data[:, :3, :, :] = ckpt_patch_embed_weight.data[:, :3, :, :]
 
-        # TODO: Do something smarter?
+        # Do something smarter?
         for k in ['pos_embed', 'patch_embed.proj.weight', 'patch_embed.proj.bias', 'head.weight', 'head.bias']:
             if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
                 print(f"Removing key {k} from pretrained checkpoint")
@@ -297,7 +300,7 @@ def main(args):
         msg = model.load_state_dict(checkpoint_model, strict=False)
         print(msg)
 
-        # TODO: change assert msg based on patch_embed
+        #  change assert msg based on patch_embed
         if args.global_pool:
             print(set(msg.missing_keys))
             # assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}

@@ -37,6 +37,8 @@ from util.pos_embed import interpolate_pos_embed
 #create sentinelindivudualdataset from own data
 
 def main(args):
+
+    print("cuda devices :" ,torch.cuda.device_count())
     # args: directory_path, masked_bands
     misc.init_distributed_mode(args)
 
@@ -323,10 +325,10 @@ def evaluate(data_loader, model, device):
     model.eval()
 
     for batch in metric_logger.log_every(data_loader, 10, header):
-#####TODO 2. provide images with cropped swir channels as input        
+#####2. provide images with cropped swir channels as input        
         images = batch[0]
 
-#####TODO 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
+##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
 
         target = batch[-1]
         print('image',images[-1],'target--> ',target[-1]);

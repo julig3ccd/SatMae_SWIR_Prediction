@@ -38,6 +38,7 @@ from util.pos_embed import interpolate_pos_embed
 
 def main(args):
 
+    print ("cuda available: ",torch.cuda.is_available())
     print("cuda devices :" ,torch.cuda.device_count())
     # args: directory_path, masked_bands
     misc.init_distributed_mode(args)

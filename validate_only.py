@@ -38,6 +38,12 @@ from util.pos_embed import interpolate_pos_embed
 
 def main(args):
 
+
+    
+    print("Torch Version:        ", torch.__version__)
+    print("Torch CUDA Version:   ", torch.version.cuda)
+    print("Torch CUDNN Version:  ", torch.backends.cudnn.version())
+
     print ("cuda available: ",torch.cuda.is_available())
     print("cuda devices :" ,torch.cuda.device_count())
     # args: directory_path, masked_bands

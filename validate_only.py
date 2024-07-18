@@ -43,7 +43,7 @@ def main(args):
     print("Torch Version:        ", torch.__version__)
     print("Torch CUDA Version:   ", torch.version.cuda)
     print("Torch CUDNN Version:  ", torch.backends.cudnn.version())
-
+    
     print ("cuda available: ",torch.cuda.is_available())
     print("cuda devices :" ,torch.cuda.device_count())
     # args: directory_path, masked_bands
@@ -134,7 +134,7 @@ def main(args):
         print(f"Grouping bands {args.grouped_bands}")
         model = models_vit_group_channels.__dict__[args.model](
             patch_size=args.patch_size, img_size=args.input_size,
-            # in_chans=dataset_train.in_c, seems not to be used and would require dataset_train to be defined
+            in_chans=dataset_val.in_c, 
             channel_groups=args.grouped_bands,
             num_classes=args.nb_classes, drop_path_rate=args.drop_path, global_pool=args.global_pool,
         )

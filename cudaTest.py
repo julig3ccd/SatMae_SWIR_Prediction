@@ -1,10 +1,12 @@
 import os
 import torch
 
+print("Device Count: ", torch.cuda.device_count())
+# Check if CUDA is available
+print("CUDA Available: ", torch.cuda.is_available())
 
 
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 print("env variable set to ",os.environ['CUDA_VISIBLE_DEVICES'])
 
 print("Device Count: ", torch.cuda.device_count())

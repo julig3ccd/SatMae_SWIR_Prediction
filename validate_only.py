@@ -33,6 +33,55 @@ from util.pos_embed import interpolate_pos_embed
 
 
 
+#customized evaluate function to evaluate accuracy of swir prediction not classification
+@torch.no_grad()
+def evaluate(data_loader, model, device):
+
+##### 1.rewrite criterion to mean squared error
+    criterion = torch.nn.MSELoss()
+
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    header = 'Test:'
+
+    # switch to evaluation mode
+    model.eval()
+
+    for batch in metric_logger.log_every(data_loader, 10, header):
+#####2. provide images with cropped swir channels as input        
+        images = batch[0]
+
+##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
+
+        target = batch[-1]
+        print('image',images[-1],'target--> ',target[-1]);
+        images = images.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True)
+
+        # print("before pass model")
+        # compute output
+        with torch.cuda.amp.autocast():
+            output = model(images)
+            loss = criterion(output, target)
+
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # print(acc1, acc5, flush=True)
+
+        batch_size = images.shape[0]
+        metric_logger.update(loss=loss.item())
+        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
+        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
+          .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
+
+
+
+
+
 
 #create sentinelindivudualdataset from own data
 
@@ -317,46 +366,4 @@ if __name__ == '__main__':
 
 
 
-#customized evaluate function to evaluate accuracy of swir prediction not classification
-@torch.no_grad()
-def evaluate(data_loader, model, device):
 
-##### 1.rewrite criterion to mean squared error
-    criterion = torch.nn.MSELoss()
-
-    metric_logger = misc.MetricLogger(delimiter="  ")
-    header = 'Test:'
-
-    # switch to evaluation mode
-    model.eval()
-
-    for batch in metric_logger.log_every(data_loader, 10, header):
-#####2. provide images with cropped swir channels as input        
-        images = batch[0]
-
-##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
-
-        target = batch[-1]
-        print('image',images[-1],'target--> ',target[-1]);
-        images = images.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True)
-
-        # print("before pass model")
-        # compute output
-        with torch.cuda.amp.autocast():
-            output = model(images)
-            loss = criterion(output, target)
-
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        # print(acc1, acc5, flush=True)
-
-        batch_size = images.shape[0]
-        metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
-    # gather the stats from all processes
-    metric_logger.synchronize_between_processes()
-    print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-          .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
-
-    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}

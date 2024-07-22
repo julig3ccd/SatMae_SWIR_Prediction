@@ -230,7 +230,7 @@ def main(args):
 
     # Set up wandb
     if global_rank == 0 and args.wandb is not None:
-        wandb.init(project=args.wandb, entity="mae-sentinel")
+        wandb.init(project=args.wandb, entity="julian-geissinger")
         wandb.config.update(args)
         wandb.watch(model)
 

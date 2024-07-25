@@ -522,15 +522,16 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
 
         # create path strings for all tiff files in directory
-        filePaths = []
+        fileData = []
+        img_id = 0
         for file in os.listdir(directory_path):
             if file.endswith(".tiff"):
-                filePaths.append(directory_path+"/"+file)
-      
+                fileData.append(directory_path+"/"+file, img_id)
+                img_id += 1
 
               #create df containing all file paths
-        if len(filePaths) != 0:
-            self.df = pd.DataFrame(filePaths, columns=['image_path'])
+        if len(fileData) != 0:
+            self.df = pd.DataFrame(fileData, columns=['image_path','image_id'])
         else:
             raise ValueError('No tiff files found in directory');
         
@@ -569,7 +570,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         
         inputImages = self.open_image(selection['image_path'])  # (h, w, c)
         #save initial loaded img with all channels
-        targetImage = inputImages;
+        targetImages = inputImages;
         #mask out bands of input image 
         if self.masked_bands is not None:
             #TODO decide wheather to use mean or 0 for masking
@@ -581,7 +582,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         
         #TODO check if transformed tensor should be used for target img or not
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
-        targetImage_as_tensor = self.transform(targetImage)  # (c, h, w)
+        targetImage_as_tensor = self.transform(targetImages)  # (c, h, w)
 
         if self.dropped_bands is not None:
             keep_idxs = [i for i in range(img_as_tensor.shape[0]) if i not in self.dropped_bands]
@@ -590,7 +591,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         sample = {
             'inputImages': inputImages,
             #'labels': labels,
-            'targetImage': targetImage,
+            'targetImage': targetImages,
             'image_ids': selection['image_id'],
             'timestamps': selection['timestamp']
         }

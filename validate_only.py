@@ -112,6 +112,7 @@ def main(args):
     
     #TODO create a 2 columns in dataframe where one holds the masked bands and the other holds all bands
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
+    print("OWN DATASET  " ,dataset_val.head(10))
     #not used anyways for now, but needs to be changed for actual training
     #dataset_train = build_fmow_dataset(is_train=True, args=args)
 
@@ -279,7 +280,7 @@ def main(args):
 
     # Set up wandb
     if global_rank == 0 and args.wandb is not None:
-        #wandb.init(project=args.wandb, entity="JULIAN_GEISSINGER")
+        #wandb.init(project=args.wandb, entity="swir-prediction-thesis")
         wandb.init(project=args.wandb)
         wandb.config.update(args)
         wandb.watch(model)

@@ -594,7 +594,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
             #'labels': labels,
             'targetImage': targetImages,
             'image_ids': selection['image_id'],
-            'timestamps': selection['timestamp']
+            #'timestamps': selection['timestamp']
         }
         return inputImg_as_tensor, targetImage_as_tensor
 

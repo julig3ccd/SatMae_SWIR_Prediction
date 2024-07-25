@@ -186,7 +186,8 @@ def main(args):
             patch_size=args.patch_size, img_size=args.input_size,
             in_chans=dataset_val.in_c, 
             channel_groups=args.grouped_bands,
-            num_classes=args.nb_classes, drop_path_rate=args.drop_path, global_pool=args.global_pool,
+            num_classes=args.nb_classes, drop_path_rate=args.drop_path, 
+            #global_pool=args.global_pool, --> uncommented bc it doesnt seem to be used in init of model (hardcoded to False)
         )
     else:
         model = models_vit.__dict__[args.model](

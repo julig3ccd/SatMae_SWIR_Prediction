@@ -526,7 +526,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         img_id = 0
         for file in os.listdir(directory_path):
             if file.endswith(".tiff"):
-                fileData.append(directory_path+"/"+file, img_id)
+                currentFileData= (directory_path+"/"+file, img_id)
+                fileData.append(currentFileData)
                 img_id += 1
 
               #create df containing all file paths

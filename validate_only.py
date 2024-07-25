@@ -112,7 +112,7 @@ def main(args):
     
     #TODO create a 2 columns in dataframe where one holds the masked bands and the other holds all bands
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
-    print("OWN DATASET  " ,dataset_val.head(10))
+    print("OWN DATASET  " ,dataset_val.df.head(10))
     #not used anyways for now, but needs to be changed for actual training
     #dataset_train = build_fmow_dataset(is_train=True, args=args)
 

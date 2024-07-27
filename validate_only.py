@@ -202,10 +202,12 @@ def main(args):
 
 
    #not used for now bc only evaluation
-    if args.finetune and not args.eval:
-        checkpoint = torch.load(args.finetune, map_location='cpu')
+   # if args.finetune and not args.eval:
+   #trying to use it even in eval so that the model can be loaded because of error in position embedding when using mae
+    if args.resume is not None:
+        checkpoint = torch.load(args.resume, map_location='cpu')
 
-        print("Load pre-trained checkpoint from: %s" % args.finetune)
+        print("Load pre-trained checkpoint from: %s" % args.resume)
         checkpoint_model = checkpoint['model']
         state_dict = model.state_dict()
 

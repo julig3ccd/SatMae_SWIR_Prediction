@@ -191,7 +191,7 @@ def main(args):
             #global_pool=args.global_pool, --> uncommented bc it doesnt seem to be used in init of model (hardcoded to False)
         )
     elif args.model_type == 'mae_group_c':
-        model = models_mae_group_channels.__dict__()
+        model = models_mae_group_channels.__dict__[args.model]()
 
     else:
         model = models_vit.__dict__[args.model](

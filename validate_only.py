@@ -267,9 +267,15 @@ def main(args):
     
     print("NO WEIGHT DECAY LIST FOR VIT MODEL : " ,model_without_ddp.no_weight_decay())
 
+    # param_groups = lrd.param_groups_lrd(model_without_ddp, args.weight_decay,
+    #                                         no_weight_decay_list=model_without_ddp.no_weight_decay(),
+    #                                         layer_decay=args.layer_decay)
+    
     param_groups = lrd.param_groups_lrd(model_without_ddp, args.weight_decay,
-                                            no_weight_decay_list=model_without_ddp.no_weight_decay(),
+                                            no_weight_decay_list=[], #empty for now bc there was no no_weight_decay_list in mae model
                                             layer_decay=args.layer_decay)
+
+
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr)
     loss_scaler = NativeScaler()
 

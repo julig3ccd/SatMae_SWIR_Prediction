@@ -122,6 +122,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
+
+   #added this in case we need to set no weight decay later, but sure of parameters
+    def no_weight_decay(self):
+        return ['pos_embed', 'cls_token', 'channel_embed', 'mask_token', 'decoder_pos_embed', 'decoder_channel_embed']
+
+
     def patchify(self, imgs, p, c):
         """
         imgs: (N, C, H, W)

@@ -272,7 +272,7 @@ def main(args):
     #                                         layer_decay=args.layer_decay)
     
     param_groups = lrd.param_groups_lrd(model_without_ddp, args.weight_decay,
-                                            no_weight_decay_list=[], #empty for now bc there was no no_weight_decay_list in mae model
+                                            no_weight_decay_list=model_without_ddp.no_weight_decay(), #empty for now bc there was no no_weight_decay_list in mae model
                                             layer_decay=args.layer_decay)
 
 

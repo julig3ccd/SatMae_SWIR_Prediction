@@ -47,7 +47,7 @@ def get_args_parser():
 
     # Model parameters
     parser.add_argument('--model_type', default=None, choices=['group_c', 'resnet', 'resnet_pre',
-                                                               'temporal', 'vanilla'],
+                                                               'temporal', 'vanilla','mae_group_c'],
                         help='Use channel model')
     parser.add_argument('--model', default='vit_large_patch16', type=str, metavar='MODEL',
                         help='Name of model to train')

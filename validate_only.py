@@ -219,7 +219,8 @@ def main(args):
         #         model.patch_embed.proj.weight.data[:, :3, :, :] = ckpt_patch_embed_weight.data[:, :3, :, :]
 
         # Do something smarter?
-        for k in ['pos_embed', 'patch_embed.proj.weight', 'patch_embed.proj.bias']:
+        for k in ['pos_embed', 'patch_embed.proj.weight', 
+                  'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight']:
             if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]

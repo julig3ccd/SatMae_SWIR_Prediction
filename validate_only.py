@@ -183,16 +183,16 @@ def main(args):
         if len(args.grouped_bands) == 0:
             args.grouped_bands = [[0, 1, 2, 6], [3, 4, 5, 7], [8, 9]]
         print(f"Grouping bands {args.grouped_bands}")
-        print("using maegroupchannels model")
-        model = models_mae_group_channels.__dict__[args.model](
-            #uncommented bc MAE model has args hardcoded in __init__
-            #patch_size=args.patch_size,
-            # img_size=args.input_size,
-            #in_chans=dataset_val.in_c, 
-            #channel_groups=args.grouped_bands,
-            #num_classes=args.nb_classes, drop_path_rate=args.drop_path, 
+        model = models_vit_group_channels.__dict__[args.model](
+            patch_size=args.patch_size, img_size=args.input_size,
+            in_chans=dataset_val.in_c, 
+            channel_groups=args.grouped_bands,
+            num_classes=args.nb_classes, drop_path_rate=args.drop_path, 
             #global_pool=args.global_pool, --> uncommented bc it doesnt seem to be used in init of model (hardcoded to False)
         )
+    elif args.model_type == 'mae_group_c':
+        model = models_mae_group_channels.__dict__()
+
     else:
         model = models_vit.__dict__[args.model](
             patch_size=args.patch_size, img_size=args.input_size,

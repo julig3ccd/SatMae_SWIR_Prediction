@@ -204,7 +204,7 @@ def main(args):
    #not used for now bc only evaluation
    # if args.finetune and not args.eval:
    #trying to use it even in eval so that the model can be loaded because of error in position embedding when using mae
-    if args.resume is not None:
+    if args.finetune is not None:
         checkpoint = torch.load(args.resume, map_location='cpu')
 
         print("Load pre-trained checkpoint from: %s" % args.resume)

@@ -221,7 +221,7 @@ def main(args):
 
         # Do something smarter?
         for k in ['pos_embed', 'patch_embed.proj.weight', 
-                  'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight']:
+                  'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight','head.weight','head.bias']:
             if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]
@@ -269,7 +269,7 @@ def main(args):
 
     # build optimizer with layer-wise lr decay (lrd)
     
-    print("NO WEIGHT DECAY LIST FOR VIT MODEL : " ,model_without_ddp.no_weight_decay())
+    #print("NO WEIGHT DECAY LIST FOR VIT MODEL : " ,model_without_ddp.no_weight_decay())
 
     # param_groups = lrd.param_groups_lrd(model_without_ddp, args.weight_decay,
     #                                         no_weight_decay_list=model_without_ddp.no_weight_decay(),

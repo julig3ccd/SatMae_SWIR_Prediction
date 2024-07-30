@@ -17,7 +17,7 @@ from util.pos_embed import get_2d_sincos_pos_embed, get_1d_sincos_pos_embed_from
 class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransformer):
     """ Vision Transformer with support for global average pooling
     """
-    def __init__(self, global_pool=False, channel_embed=256,
+    def __init__(self, global_pool=False, channel_embed=256, num_channels=13,
                  channel_groups=((0, 1, 2, 6), (3, 4, 5, 7), (8, 9)), **kwargs):
         super().__init__(**kwargs)
         img_size = kwargs['img_size']
@@ -55,7 +55,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
             del self.norm  # remove the original norm      
 
-        self.head = nn.Conv2d(embed_dim, num_channels=13, kernel_size=1)
+        
+        self.head = nn.Conv2d(embed_dim, out_channels=num_channels, kernel_size=1)
         torch.nn.init.trunc_normal_(self.head.weight, std=0.02)
         self.head.bias.data.fill_(0)    
 

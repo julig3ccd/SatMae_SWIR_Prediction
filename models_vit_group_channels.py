@@ -53,7 +53,11 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             embed_dim = kwargs['embed_dim']
             self.fc_norm = norm_layer(embed_dim)
 
-            del self.norm  # remove the original norm
+            del self.norm  # remove the original norm      
+
+        self.head = nn.Conv2d(embed_dim, num_channels=13, kernel_size=1)
+        torch.nn.init.trunc_normal_(self.head.weight, std=0.02)
+        self.head.bias.data.fill_(0)    
 
     def forward_features(self, x):
         b, c, h, w = x.shape
@@ -95,6 +99,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             x = self.norm(x)
             outcome = x[:, 0]
 
+        outcome = self.head(outcome.view(b, h, w, -1).permute(0, 3, 1, 2))
+    
         return outcome
 
 

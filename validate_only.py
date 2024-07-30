@@ -54,7 +54,7 @@ def evaluate(data_loader, model, device):
 ##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
 
         target = batch[-1]
-        print('image shape',images[-1].shape,'target shape --> ',target[-1].shape)
+        print('images [0] shape -->' ,images[0].shape ,'images [-1] shape -->',images[-1].shape, 'target shape [-1] --> ',target[-1].shape, 'target shape [0] --> ',target[0].shape)
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 

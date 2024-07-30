@@ -100,7 +100,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             x = self.norm(x)
             #outcome = x[:, 0]
         
-            outcome = self.head(outcome.view(b, h, w, -1).permute(0, 3, 1, 2))
+            outcome = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
 
         
     

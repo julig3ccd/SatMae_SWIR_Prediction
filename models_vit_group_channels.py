@@ -68,6 +68,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             x_c = x[:, group, :, :]
             x_c_embed.append(self.patch_embed[i](x_c))  # (N, L, D)
 
+        print("length x_c_embed", len(x_c_embed))
+
         x = torch.stack(x_c_embed, dim=1)  # (N, G, L, D)
         _, G, L, D = x.shape
 

@@ -85,7 +85,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         # add pos embed w/o cls token
         x = x + pos_channel  # (N, G, L, D)
         x = x.view(b, -1, D)  # (N, G*L, D)
-
+        print("after pos embed",x.shape)
         cls_pos_channel = torch.cat((self.pos_embed[:, :1, :], self.channel_cls_embed), dim=-1)  # (1, 1, D)
         # stole cls_tokens impl from Phil Wang, thanks
         cls_tokens = cls_pos_channel + self.cls_token.expand(b, -1, -1)

@@ -92,6 +92,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         for blk in self.blocks:
             x = blk(x)
+            
+        print("after blocks",x.shape)    
 
         if self.global_pool:
             x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
@@ -99,8 +101,9 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         else:
             x = self.norm(x)
             #outcome = x[:, 0]
-        
-            outcome = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
+            print("after norm", x.shape)    
+
+            outcome = self.head(outcome.view(b, h, w, -1).permute(0, 3, 1, 2))
 
         
     

@@ -138,7 +138,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             #outcome_head = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
             #print("outcome with modified head shape", outcome_head.shape)
        
-        swir_tokens = outcome[:, -144:, :]
+        swir_tokens = x[:, -144:, :]
         # Reshape to [batch_size, 2, 12, 12, 8, 8]
         reshaped_tokens = swir_tokens.view(8, 2, 12, 12, 8, 8)
 

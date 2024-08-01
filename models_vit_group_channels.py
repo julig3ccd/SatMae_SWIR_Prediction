@@ -109,7 +109,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         # add pos embed w/o cls token
         x = x + pos_channel  # (N, G, L, D) # (batch, group, token seqeuence length, dim)
-        print("before x.view(b,-1,D)",x.shape) #shape = ([8, 3, 144, 1024]) ?
+        print("before x.view(b,-1,D)",x.shape) #shape = ([8, 3, 144, 1024])
         x = x.view(b, -1, D)  # (N, G*L, D) # 3 groups (G) * 144 tokens (L) = 432 tokens
         print("after pos embed",x.shape) #shape ([8, 432, 1024]) 
         cls_pos_channel = torch.cat((self.pos_embed[:, :1, :], self.channel_cls_embed), dim=-1)  # (1, 1, D)
@@ -132,14 +132,48 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         else:
             x = self.norm(x)
             print("after norm", x.shape)
-            outcome = x[:, 0]
-            print("outcome shape" , outcome.shape)
+            #outcome = x[:, 0]
+            print("outcome shape" , outcome.shape, outcome)
             
             #outcome_head = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
             #print("outcome with modified head shape", outcome_head.shape)
-        
+       
+        swir_tokens = outcome[:, -144:, :]
+        # Reshape to [batch_size, 2, 12, 12, 8, 8]
+        reshaped_tokens = swir_tokens.view(8, 2, 12, 12, 8, 8)
+
+        # Permute to [batch_size, 2, 12, 8, 12, 8]
+        reshaped_tokens = reshaped_tokens.permute(0, 1, 2, 4, 3, 5)
+
+        # Finally reshape to [batch_size, 2, 96, 96]
+        final_image = reshaped_tokens.reshape(8, 2, 96, 96)
+        print("final_image shape", final_image.shape)
+
+        return final_image
     
-        return outcome
+
+# def reshape_to_image(outcome, h, w, patch_size):
+#     batch_size, num_tokens, patch_dim = outcome.shape
+    
+#     # Exclude the cls token
+#     #outcome = outcome[:, 1:, :]  # shape now (batch_size, num_patches, patch_dim)
+    
+#     # Determine the number of patches along height and width
+#     num_patches = (h // patch_size) * (w // patch_size)
+    
+#     assert num_tokens - 1 == num_patches, "Mismatch between number of tokens and patches"
+    
+#     # Reshape to (batch_size, num_patches_height, num_patches_width, patch_dim)
+#     outcome = outcome.view(batch_size, h // patch_size, w // patch_size, patch_dim)
+    
+#     # Permute to (batch_size, patch_dim, num_patches_height, num_patches_width)
+#     outcome = outcome.permute(0, 3, 1, 2)
+    
+#     # Final reshape to (batch_size, num_channels, height, width)
+#     num_channels = patch_dim
+#     outcome = outcome.view(batch_size, num_channels, h, w)
+    
+#     return outcome  
 
 
 def vit_base_patch16(**kwargs):

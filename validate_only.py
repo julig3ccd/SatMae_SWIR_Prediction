@@ -23,6 +23,9 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 
 from pathlib import Path
+import matplotlib.pyplot as plt
+import torchvision.transforms as transforms
+from PIL import Image
 
 from main_finetune import get_args_parser
 import models_mae_group_channels
@@ -31,6 +34,32 @@ import models_vit
 
 from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
+
+
+def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
+    image_to_show = final_image[0]      # Shape: [2, 96, 96]
+
+    # Normalize to [0, 1] for visualization if necessary
+    image_to_show = (image_to_show - image_to_show.min()) / (image_to_show.max() - image_to_show.min())
+
+    # Convert to PIL Image
+    # If the tensor has multiple channels, convert each channel separately
+    to_pil_image = transforms.ToPILImage()
+    # Convert each channel to a PIL image and show
+    for i in range(image_to_show.size(0)):  # Loop through channels
+        channel_image = to_pil_image(image_to_show[i])
+        channel_image.show(title=f'Channel {i}')
+
+    # If you want to use matplotlib for showing multiple channels together:
+
+    # Convert tensor to numpy array
+    image_np = image_to_show.permute(1, 2, 0).numpy()  # Shape: [96, 96, 2]
+
+    # Display the image using matplotlib
+    plt.imshow(image_np)
+    plt.title('Image with 2 Channels')
+    plt.axis('off')  # Turn off axis
+    plt.show()
 
 
 
@@ -62,6 +91,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
+            print_img_from_tensor(output)
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

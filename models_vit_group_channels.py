@@ -133,7 +133,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             x = self.norm(x)
             print("after norm", x.shape)
             #outcome = x[:, 0]
-            print("outcome shape" , outcome.shape, outcome)
+            #print("outcome shape" , outcome.shape, outcome)
             
             #outcome_head = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
             #print("outcome with modified head shape", outcome_head.shape)

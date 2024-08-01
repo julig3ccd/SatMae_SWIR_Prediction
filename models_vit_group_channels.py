@@ -24,7 +24,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         patch_size = kwargs['patch_size']
         in_c = kwargs['in_chans']
         embed_dim = kwargs['embed_dim']
-
+        print("embed_dim as parameter for patch_embed", embed_dim)
         self.channel_groups = channel_groups
 
         self.patch_embed = nn.ModuleList([PatchEmbed(img_size, patch_size, len(group), embed_dim)

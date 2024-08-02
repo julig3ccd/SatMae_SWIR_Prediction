@@ -11,7 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 from PIL import Image
-
+import numpy as np
 
 
 import torch
@@ -183,6 +183,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
     # Convert tensor to numpy array
         image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
+        black = np.zeros((12,12), dtype=np.uint8)
+        image_np = np.dstack((image_np, black))
 
     # Display the image using matplotlib
         plt.imshow(image_np)

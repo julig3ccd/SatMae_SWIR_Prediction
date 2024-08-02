@@ -48,6 +48,7 @@ def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
     # Convert each channel to a PIL image and show
     for i in range(image_to_show.size(0)):  # Loop through channels
         channel_image = to_pil_image(image_to_show[i])
+        channel_image.save(f'{""}_channel_{i}.png')
         channel_image.show(title=f'Channel {i}')
 
     # If you want to use matplotlib for showing multiple channels together:
@@ -62,6 +63,7 @@ def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
 
     # Display the image using matplotlib
     plt.imshow(image_np)
+    plt.savefig('final_image.png')
     plt.title('Image with 2 Channels')
     plt.axis('off')  # Turn off axis
     plt.show()

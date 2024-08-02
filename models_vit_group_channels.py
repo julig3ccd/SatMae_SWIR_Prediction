@@ -168,7 +168,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         #remove this printing block after debugging
         image_to_show = final_image[0]
-        
+
         image_to_show = (image_to_show - image_to_show.min()) / (image_to_show.max() - image_to_show.min())
 
     # Convert to PIL Image
@@ -182,7 +182,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
     # If you want to use matplotlib for showing multiple channels together:
 
     # Convert tensor to numpy array
-        image_np = image_to_show.permute(1, 2, 0).numpy()  # Shape: [96, 96, 2]
+        image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
 
     # Display the image using matplotlib
         plt.imshow(image_np)

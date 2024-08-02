@@ -144,9 +144,13 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         reshaped_tokens = reshaped_tokens.permute(0, 3, 1, 2)
 
+        print("before type conversion", reshaped_tokens.dtype)
+
         reshaped_tokens = reshaped_tokens.to(torch.float32)
-         
-        conv2d = nn.Conv2d(1024, 2, kernel_size=1,bias=True) 
+        
+        print("after type conversion", reshaped_tokens.dtype)
+        
+        conv2d = nn.Conv2d(1024, 2, kernel_size=1) 
 
         # Finally reshape to [batch_size, 2, 96, 96]
         final_image = conv2d(reshaped_tokens)

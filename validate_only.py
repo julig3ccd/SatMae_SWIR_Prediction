@@ -62,6 +62,7 @@ def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
 
 
     # Display the image using matplotlib
+    print("image type: ", image_np.dtype, "image shape: ", image_np.shape)
     plt.imshow(image_np)
     plt.savefig('final_image.png')
     plt.title('Image with 2 Channels')

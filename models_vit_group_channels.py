@@ -73,6 +73,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
     def forward_features(self, x):
         b, c, h, w = x.shape
+        print("input shape", x.shape)
 
         x_c_embed = []
         for i, group in enumerate(self.channel_groups):

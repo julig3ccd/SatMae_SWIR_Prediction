@@ -58,6 +58,7 @@ def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
     #add black channel so that it can be displayed(imshow requests 3 channels)
     black = np.zeros((12,12), dtype=np.uint8)
     image_np = np.dstack((image_np, black))
+    image_np = image_np.to(np.float32)
 
 
 

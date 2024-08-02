@@ -52,8 +52,13 @@ def print_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
 
     # If you want to use matplotlib for showing multiple channels together:
 
-    # Convert tensor to numpy array
-    image_np = image_to_show.permute(1, 2, 0).numpy()  # Shape: [96, 96, 2]
+    # Convert tensor to numpy array, copy to cpu
+    image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
+    #add black channel so that it can be displayed(imshow requests 3 channels)
+    black = np.zeros((12,12), dtype=np.uint8)
+    image_np = np.dstack((image_np, black))
+
+
 
     # Display the image using matplotlib
     plt.imshow(image_np)

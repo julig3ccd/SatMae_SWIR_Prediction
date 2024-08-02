@@ -142,9 +142,9 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         # Reshape to [batch_size, 2, 12, 12, 8, 8]
         reshaped_tokens = swir_tokens.view(8, 12, 12, 1024)
 
-        reshaped_tokens = reshaped_tokens.permute(0, 3, 1, 2)
+        reshaped_tokens = reshaped_tokens.permute(0, 3, 1, 2).float()
          
-        conv2d = nn.Conv2d(1024, 2, kernel_size=1) 
+        conv2d = nn.Conv2d(1024, 2, kernel_size=1,bias=True) 
 
         # Finally reshape to [batch_size, 2, 96, 96]
         final_image = conv2d(reshaped_tokens)

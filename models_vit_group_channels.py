@@ -57,6 +57,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         print("pos_embed in init", self.pos_embed.shape)
         print("channel_embed in init", self.channel_embed.shape)
+        
+        self.conv2d_decode = nn.Conv2d(1024, 2, kernel_size=1)
         # self.head = nn.Conv2d(embed_dim, out_channels=num_channels, kernel_size=1)
         # torch.nn.init.trunc_normal_(self.head.weight, std=0.02)
         # self.head.bias.data.fill_(0)    
@@ -150,10 +152,9 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         
         # print("after type conversion", reshaped_tokens.dtype)
         
-        conv2d = nn.Conv2d(1024, 2, kernel_size=1).half() 
-
+        
         # Finally reshape to [batch_size, 2, 96, 96]
-        final_image = conv2d(reshaped_tokens)
+        final_image = self.conv2d_decode(reshaped_tokens)
         print("final_image shape", final_image.shape)
 
         return final_image

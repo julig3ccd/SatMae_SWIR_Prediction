@@ -66,7 +66,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         print("pos_embed in init", self.pos_embed.shape)
         print("channel_embed in init", self.channel_embed.shape)
 
-        self.conv2d_decode = nn.Conv2d(1024, 2, kernel_size=1)
+        self.head= nn.Conv2d(1024, 2, kernel_size=1)
+        #self.conv2d_decode = nn.Conv2d(1024, 2, kernel_size=1)
         # self.head = nn.Conv2d(embed_dim, out_channels=num_channels, kernel_size=1)
         # torch.nn.init.trunc_normal_(self.head.weight, std=0.02)
         # self.head.bias.data.fill_(0)    
@@ -163,39 +164,10 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         
         
         # Finally reshape to [batch_size, 2, 96, 96]
-        final_image = self.conv2d_decode(reshaped_tokens)
-        print("final_image shape", final_image.shape)
+        #final_image = self.conv2d_decode(reshaped_tokens)
+        #print("final_image shape", final_image.shape)
 
-
-        #remove this printing block after debugging
-        image_to_show = final_image[0]
-
-        image_to_show = (image_to_show - image_to_show.min()) / (image_to_show.max() - image_to_show.min())
-
-    # Convert to PIL Image
-    # If the tensor has multiple channels, convert each channel separately
-        to_pil_image = transforms.ToPILImage()
-    # Convert each channel to a PIL image and show
-        for i in range(image_to_show.size(0)):  # Loop through channels
-            channel_image = to_pil_image(image_to_show[i])
-            channel_image.show(title=f'Channel {i}')
-
-    # If you want to use matplotlib for showing multiple channels together:
-
-    # Convert tensor to numpy array
-        image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
-        black = np.zeros((12,12), dtype=np.uint8)
-        image_np = np.dstack((image_np, black))
-
-    # Display the image using matplotlib
-        plt.imshow(image_np)
-        plt.title('Image with 2 Channels')
-        plt.axis('off')  # Turn off axis
-        plt.show()
-
-
-
-        return final_image
+        return reshaped_tokens
     
 
 # def reshape_to_image(outcome, h, w, patch_size):

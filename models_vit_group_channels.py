@@ -13,6 +13,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
 
+import decoder
 
 import torch
 import torch.nn as nn
@@ -34,12 +35,14 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         embed_dim = kwargs['embed_dim']
         print("embed_dim as parameter for patch_embed", embed_dim)
         self.channel_groups = channel_groups
-
+        
+        print("patch size input for patch embedding", patch_size)
+        print("img size input for patch embedding", img_size)
         self.patch_embed = nn.ModuleList([PatchEmbed(img_size, patch_size, len(group), embed_dim)
                                           for group in channel_groups])
         # self.patch_embed = PatchEmbed(img_size, patch_size, 1, embed_dim)
         num_patches = self.patch_embed[0].num_patches
-
+        print("num_patches", num_patches)
         # Positional and channel embed
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim - channel_embed))
         pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], int(num_patches ** .5), cls_token=True)
@@ -65,8 +68,12 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         print("pos_embed in init", self.pos_embed.shape)
         print("channel_embed in init", self.channel_embed.shape)
+        #init decoder
+        unet_like_decoder = decoder.Decoder(embed_dim, len(channel_groups[2]))
+        
 
-        self.head= nn.Conv2d(1024, 2, kernel_size=1)
+        self.head= unet_like_decoder
+    
         #self.conv2d_decode = nn.Conv2d(1024, 2, kernel_size=1)
         # self.head = nn.Conv2d(embed_dim, out_channels=num_channels, kernel_size=1)
         # torch.nn.init.trunc_normal_(self.head.weight, std=0.02)
@@ -151,10 +158,14 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
             #print("outcome with modified head shape", outcome_head.shape)
         print("input for reshape", x.shape)
         swir_tokens = x[:, -144:, :]
+        swir_tokens_reshaped_for_decoder=decoder.reshape_vit_output(swir_tokens)
+        #shape ([8, 144, 1024])
         # Reshape to [batch_size, 2, 12, 12, 8, 8]
-        reshaped_tokens = swir_tokens.view(8, 12, 12, 1024)
 
-        reshaped_tokens = reshaped_tokens.permute(0, 3, 1, 2)
+        # unpatchified_tokens = swir_tokens.view(8, 12, 12, 1024)
+        # reshaped_tokens = swir_tokens.view(8, 12, 12, 1024)
+
+        # reshaped_tokens = reshaped_tokens.permute(0, 3, 1, 2)
 
         # print("before type conversion", reshaped_tokens.dtype)
 
@@ -167,7 +178,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         #final_image = self.conv2d_decode(reshaped_tokens)
         #print("final_image shape", final_image.shape)
 
-        return reshaped_tokens
+        return swir_tokens_reshaped_for_decoder
     
 
 # def reshape_to_image(outcome, h, w, patch_size):

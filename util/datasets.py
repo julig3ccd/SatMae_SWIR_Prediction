@@ -571,10 +571,10 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         
         inputImages = self.open_image(selection['image_path'])  # (h, w, c)
         #take only the last two channels as target
-        targetImages = inputImages[:, :,[11,12]] 
+        #targetImages = inputImages[:, :,[11,12]] 
         #mask out bands of input image 
         if self.masked_bands is not None:
-            #TODO decide wheather to use mean or 0 for masking
+            #TODO decide whether to use mean or 0 for masking
             #inputImages[:, :, self.masked_bands] = np.array(self.mean)[self.masked_bands]
             inputImages[:, :, self.masked_bands] = 0
 
@@ -582,19 +582,20 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         #labels = self.categories.index(selection['category'])
         
         #TODO check if transformed tensor should be used for target img or not
-        print("input images shape in getitem: ",inputImages.shape)
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
-        print("target images shape in getitem: ",targetImages.shape)
-        targetImage_as_tensor = self.transform(targetImages)  # (c, h, w)
+        print("input images tensor shape in getitem: ",inputImg_as_tensor.shape)
+        
+        targetImage_as_tensor = inputImg_as_tensor[-2,:,:]  # (c, h, w)
+        print("target images shape in getitem: ",targetImage_as_tensor.shape)
 
         if self.dropped_bands is not None:
             keep_idxs = [i for i in range(img_as_tensor.shape[0]) if i not in self.dropped_bands]
             img_as_tensor = img_as_tensor[keep_idxs, :, :]
 
         sample = {
-            'inputImages': inputImages,
+            'inputImg_as_tensor': inputImg_as_tensor,
             #'labels': labels,
-            'targetImage': targetImages,
+            'input_image_as_tensor': inputImg_as_tensor,
             'image_ids': selection['image_id'],
             #'timestamps': selection['timestamp']
         }

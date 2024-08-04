@@ -261,7 +261,8 @@ def main(args):
         # Do something smarter?
         for k in ['pos_embed', 'patch_embed.proj.weight', 
                   'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight','head.weight','head.bias']:
-            if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
+            # TODO see if head.weight has to be removed if its not in state_dict or if it works after initializing it in the model
+            if (k in checkpoint_model not in state_dict) or (k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape):
                 print(f"Removing key {k} from pretrained checkpoint")
                 del checkpoint_model[k]
 

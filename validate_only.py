@@ -35,42 +35,46 @@ import models_vit
 from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
 
-
-def save_img_from_tensor(final_image,img_size):  # final_image shape: [8,2,96,96]
-    image_to_show = final_image[0]      # Shape: [2, 96, 96]
-
-    # Normalize to [0, 1] for visualization if necessary
-    image_to_show = (image_to_show - image_to_show.min()) / (image_to_show.max() - image_to_show.min())
-
-    # Convert to PIL Image
-    # If the tensor has multiple channels, convert each channel separately
+def create_img_from_tensor(image,img_size): 
+    image = (image - image.min()) / (image.max() - image.min())
     to_pil_image = transforms.ToPILImage()
+
     # Convert each channel to a PIL image and show
-    for i in range(image_to_show.size(0)):  # Loop through channels
-        channel_image = to_pil_image(image_to_show[i])
+    for i in range(image.size(0)):  # Loop through channels
+        channel_image = to_pil_image(image[i])
         channel_image.save(f'{""}_channel_{i}.png')
-        channel_image.show(title=f'Channel {i}')
-
-    # If you want to use matplotlib for showing multiple channels together:
-
-    # Convert tensor to numpy array, copy to cpu
-    image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
-    #add black channel so that it can be displayed(imshow requests 3 channels)
+         
+    image_np = image.permute(1, 2, 0).cpu().numpy()
+      #add black channel so that it can be displayed(imshow requests 3 channels)
     black = np.zeros((img_size,img_size), dtype=np.uint8)
     image_np = np.dstack((image_np, black))
     image_np = image_np.astype(np.float32)
 
+    return image_np
+
+def save_comparison_fig_from_tensor(final_images,target_images,img_size):  # final_image shape: [8,2,96,96]
+    first_final_img = final_images[0]      # only print first of batch for now
+    first_target_img = target_images[0]    # only print first of batch for now
+
+    # Normalize to [0, 1] for visualization if necessary
+    output = create_img_from_tensor(first_final_img,img_size)
+    target = create_img_from_tensor(first_target_img,img_size)
 
 
     # Display the image using matplotlib
-    print("image shape: ", image_np.shape)
-    plt.imshow(image_np)
-    plt.savefig(f'imgOut/final_image_{time.gmtime}.png')
-    plt.title('Image with 2 Channels + black channel')
-    plt.axis('off')  # Turn off axis
+    #print("image shape: ", image_np.shape)
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5)) 
+    ax[0].imshow(output) 
+    ax[0].set_title('Output')
+    ax[0].axis('off')  # Hide axes
+
+# Plot the 'target' image
+    ax[1].imshow(target) 
+    ax[1].set_title('Target')
+    ax[1].axis('off')  # Hide axes
+
+    plt.savefig(f'imgOut/comparison.png')
     
-
-
 
 #customized evaluate function to evaluate accuracy of swir prediction not classification
 @torch.no_grad()
@@ -100,7 +104,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_img_from_tensor(output,img_size=96)
+            save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

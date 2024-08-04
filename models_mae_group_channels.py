@@ -17,7 +17,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
     """
 
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, spatial_mask=False,
+#set patch size=8 to try to match the params of the loaded weigths
+    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,
                  channel_groups=((0, 1, 2, 6), (3, 4, 5, 7), (8, 9)),
                  channel_embed=256, embed_dim=1024, depth=24, num_heads=16,
                  decoder_channel_embed=128, decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,

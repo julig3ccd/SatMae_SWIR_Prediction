@@ -570,8 +570,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         # images = [torch.FloatTensor(rasterio.open(img_path).read()) for img_path in image_paths]
         
         inputImages = self.open_image(selection['image_path'])  # (h, w, c)
-        #save initial loaded img with all channels
-        targetImages = inputImages;
+        #take only the last two channels as target
+        targetImages = inputImages[:, :, -2] 
         #mask out bands of input image 
         if self.masked_bands is not None:
             #TODO decide wheather to use mean or 0 for masking

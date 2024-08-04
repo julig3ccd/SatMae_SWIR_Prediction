@@ -21,10 +21,12 @@ class Decoder(nn.Module):
 
 
     def forward(self, x):
+        print("decoder input shape", x.shape)
         # Upsample progressively
         x = F.relu(self.conv1(x))  # 12x12 -> 12x12
+        print( "after relu 1", x.shape)
         x = self.upconv1(x)        # 12x12 -> 24x24
-
+        print( "after upconv1", x.shape)
         x = F.relu(self.conv2(x))  # 24x24 -> 24x24
         x = self.upconv2(x)        # 24x24 -> 48x48
 

@@ -282,7 +282,8 @@ def main(args):
             # assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
 
         # manually initialize fc layer
-        trunc_normal_(model.head.weight, std=2e-5)
+        # remove trunc_normal for model.head.weight since weights are initalized in the decoder module
+        #trunc_normal_(model.head.weight, std=2e-5)
 
     model.to(device)
 

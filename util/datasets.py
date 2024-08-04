@@ -585,7 +585,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
         print("input images tensor shape in getitem: ",inputImg_as_tensor.shape)
         
-        targetImage_as_tensor = inputImg_as_tensor[-2,:,:]  # (c, h, w)
+        targetImage_as_tensor = inputImg_as_tensor[[11,12],:,:]  # (c, h, w)
         print("target images shape in getitem: ",targetImage_as_tensor.shape)
 
         if self.dropped_bands is not None:

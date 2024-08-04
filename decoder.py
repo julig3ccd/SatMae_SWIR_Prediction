@@ -10,7 +10,8 @@ class Decoder(nn.Module):
         self.conv2 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(16, 8, kernel_size=3, padding=1)
-        self.conv5 = nn.Conv2d(4, output_channels, kernel_size=1)
+
+        self.conv5 = nn.Conv2d(8, output_channels, kernel_size=1)
 
         self.upconv1 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
         self.upconv2 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
@@ -38,7 +39,7 @@ class Decoder(nn.Module):
         x = F.relu(self.conv4(x))  # 96x96 -> 96x96     -->  ([8, 8, 96, 96])
         print( "after relu 4", x.shape)
     
-        x = self.conv5(x)          # 96x96 -> 96x96   -->  ([8, 4, 192, 192])
+        x = self.conv5(x)          # 96x96 -> 96x96   -->  ([8, 2, 192, 192])
         print( "after conv5", x.shape)
         return x
 

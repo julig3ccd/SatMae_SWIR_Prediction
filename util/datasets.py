@@ -582,6 +582,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         #labels = self.categories.index(selection['category'])
         
         #TODO check if transformed tensor should be used for target img or not
+        print("input images shape in getitem: ",inputImages.shape)
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
         print("target images shape in getitem: ",targetImages.shape)
         targetImage_as_tensor = self.transform(targetImages)  # (c, h, w)

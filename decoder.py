@@ -7,36 +7,41 @@ class Decoder(nn.Module):
     def __init__(self, embed_dim, output_channels):
         super(Decoder, self).__init__()
         self.conv1 = nn.Conv2d(embed_dim, 512, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
-        self.conv5 = nn.Conv2d(64, output_channels, kernel_size=1)
+        self.conv2 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(16, 8, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(4, output_channels, kernel_size=1)
 
         self.upconv1 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
-        self.upconv2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
-        self.upconv3 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
-        self.upconv4 = nn.ConvTranspose2d(64, 64, kernel_size=2, stride=2)
+        self.upconv2 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.upconv3 = nn.ConvTranspose2d(32, 16, kernel_size=2, stride=2)
+        self.upconv4 = nn.ConvTranspose2d(8, 4, kernel_size=2, stride=2)
 
         self.apply(initialize_weights)
 
 
     def forward(self, x):
-        print("decoder input shape", x.shape)
+        print("decoder input", x.shape) #([8, 1024, 12, 12])   
         # Upsample progressively
-        x = F.relu(self.conv1(x))  # 12x12 -> 12x12
+        x = F.relu(self.conv1(x))  # 12x12 -> 12x12     --> ([8, 512, 12, 12])
         print( "after relu 1", x.shape)
-        x = self.upconv1(x)        # 12x12 -> 24x24
+        x = self.upconv1(x)        # 12x12 -> 24x24     -->  ([8, 256, 24, 24])
         print( "after upconv1", x.shape)
-        x = F.relu(self.conv2(x))  # 24x24 -> 24x24
-        x = self.upconv2(x)        # 24x24 -> 48x48
+        x = F.relu(self.conv2(x))  # 24x24 -> 24x24     -->  ([8, 128, 24, 24]) 
+        print( "after relu 2", x.shape)
+        x = self.upconv2(x)        # 24x24 -> 48x48     -->  ([8, 64, 48, 48])
+        print( "after upconv2", x.shape)
+        x = F.relu(self.conv3(x))  # 48x48 -> 48x48     -->  ([8, 32, 48, 48]) 
+        print( "after relu 3", x.shape)
+        x = self.upconv3(x)        # 48x48 -> 96x96     -->  ([8, 16, 96, 96])
+        print( "after upconv3", x.shape)
+        x = F.relu(self.conv4(x))  # 96x96 -> 96x96     -->  ([8, 8, 96, 96])
+        print( "after relu 4", x.shape)
+        x = self.upconv4(x)        # 96x96 -> 192x192   -->  ([8, 4, 192, 192])
+        print( "after upconv4", x.shape)
 
-        x = F.relu(self.conv3(x))  # 48x48 -> 48x48
-        x = self.upconv3(x)        # 48x48 -> 96x96
-
-        x = F.relu(self.conv4(x))  # 96x96 -> 96x96
-        x = self.upconv4(x)        # 96x96 -> 192x192
-
-        x = self.conv5(x)          # 192x192 -> 96x96
+        x = self.conv5(x)          # 192x192 -> 96x96   -->  ([8, 4, 192, 192])
+        print( "after conv5", x.shape)
         return x
 
 # Assuming `vit_output` is the output from the ViT with shape [8, 144, 1024]

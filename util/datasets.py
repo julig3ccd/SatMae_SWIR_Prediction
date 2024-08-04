@@ -571,7 +571,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         
         inputImages = self.open_image(selection['image_path'])  # (h, w, c)
         #take only the last two channels as target
-        targetImages = inputImages[:, :, -2] 
+        targetImages = inputImages[:, :,[11,12]] 
         #mask out bands of input image 
         if self.masked_bands is not None:
             #TODO decide wheather to use mean or 0 for masking

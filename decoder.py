@@ -17,6 +17,9 @@ class Decoder(nn.Module):
         self.upconv3 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
         self.upconv4 = nn.ConvTranspose2d(64, 64, kernel_size=2, stride=2)
 
+        self.apply(initialize_weights)
+
+
     def forward(self, x):
         # Upsample progressively
         x = F.relu(self.conv1(x))  # 12x12 -> 12x12
@@ -35,6 +38,16 @@ class Decoder(nn.Module):
         return x
 
 # Assuming `vit_output` is the output from the ViT with shape [8, 144, 1024]
+
+def initialize_weights(module):
+    if isinstance(module, nn.Conv2d) or isinstance(module, nn.ConvTranspose2d):
+        torch.nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+        if module.bias is not None:
+            torch.nn.init.constant_(module.bias, 0)
+    elif isinstance(module, nn.Linear):
+        torch.nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+        if module.bias is not None:
+            torch.nn.init.constant_(module.bias, 0)
 
 # Step 1: Decode ViT output
 def reshape_vit_output(vit_output):

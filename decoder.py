@@ -37,10 +37,8 @@ class Decoder(nn.Module):
         print( "after upconv3", x.shape)
         x = F.relu(self.conv4(x))  # 96x96 -> 96x96     -->  ([8, 8, 96, 96])
         print( "after relu 4", x.shape)
-        x = self.upconv4(x)        # 96x96 -> 192x192   -->  ([8, 4, 192, 192])
-        print( "after upconv4", x.shape)
-
-        x = self.conv5(x)          # 192x192 -> 96x96   -->  ([8, 4, 192, 192])
+    
+        x = self.conv5(x)          # 96x96 -> 96x96   -->  ([8, 4, 192, 192])
         print( "after conv5", x.shape)
         return x
 

@@ -36,7 +36,7 @@ from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
 
 
-def save_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
+def save_img_from_tensor(final_image,img_size):  # final_image shape: [8,2,96,96]
     image_to_show = final_image[0]      # Shape: [2, 96, 96]
 
     # Normalize to [0, 1] for visualization if necessary
@@ -56,7 +56,7 @@ def save_img_from_tensor(final_image):  # final_image shape: [8,2,96,96]
     # Convert tensor to numpy array, copy to cpu
     image_np = image_to_show.permute(1, 2, 0).cpu().numpy()  # Shape: [96, 96, 2]
     #add black channel so that it can be displayed(imshow requests 3 channels)
-    black = np.zeros((12,12), dtype=np.uint8)
+    black = np.zeros((img_size,img_size), dtype=np.uint8)
     image_np = np.dstack((image_np, black))
     image_np = image_np.astype(np.float32)
 
@@ -100,7 +100,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_img_from_tensor(output)
+            save_img_from_tensor(output,img_size=96)
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

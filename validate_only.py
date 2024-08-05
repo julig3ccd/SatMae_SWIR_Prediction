@@ -221,8 +221,8 @@ def main(args):
     print("input img shape in OWN DATA", inputimg.shape)
     targetimg = firstimg[1]
     
-    create_raster_file_from_tensor(inputimg[0], 'imgOut/input_after_dataset_creation')
-    create_raster_file_from_tensor(targetimg[0], 'imgOut/target_after_dataset_creation')
+    create_raster_file_from_tensor(inputimg, 'imgOut/input_after_dataset_creation')
+    create_raster_file_from_tensor(targetimg, 'imgOut/target_after_dataset_creation')
 
     
 

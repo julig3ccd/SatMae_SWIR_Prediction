@@ -61,8 +61,8 @@ def create_raster_file_from_tensor(image_tensor, path):
     print(f'Raster file saved to {output_raster_file}') 
 
 def save_as_img_with_normalization(image_tensor, path):
-    tensor= image_tensor.permute(1, 2, 0).cpu().numpy()
-    tensor = (image_tensor * 255).astype(np.uint8)
+    nptensor= image_tensor.permute(1, 2, 0).cpu().numpy()
+    tensor = (nptensor * 255).astype(np.uint8)
 
     output_raster_file = f'{path}.tif'
 

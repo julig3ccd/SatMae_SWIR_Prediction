@@ -42,26 +42,27 @@ from util.pos_embed import interpolate_pos_embed
 
 def create_raster_file_from_tensor(image_tensor, path):
 
-    image_tensor= image_tensor.permute(1, 2, 0).cpu().numpy()
+    image_tensor= image_tensor.cpu().numpy()
+    print("image tensor type before raster file creation", image_tensor.dtype, image_tensor.shape)
     output_raster_file = f'{path}.tif'
     metadata = {
     'driver': 'GTiff',
-    'count': image_tensor.shape[2],  # Number of channels/bands
+    'count': image_tensor.shape[0],  # Number of channels/bands
     'width': image_tensor.shape[1],  # Width of the raster
-    'height': image_tensor.shape[0],  # Height of the raster
+    'height': image_tensor.shape[2],  # Height of the raster
     'dtype': 'float32',  # Data type of the raster values
     'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
-    'transform': rasterio.transform.from_origin(0, image_tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
+     # Affine transform (replace as needed)
 }
 
     with rasterio.open(output_raster_file, 'w', **metadata) as dst:
-        for i in range(image_tensor.shape[2]):
+        for i in range(image_tensor.shape[0]):
              dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
 
     print(f'Raster file saved to {output_raster_file}') 
 
 def save_as_img_with_normalization(image_tensor, path):
-    nptensor= image_tensor.permute(1, 2, 0).cpu().numpy()
+    nptensor= image_tensor.cpu().numpy()
     tensor = (nptensor * 255).astype(np.uint8)
 
     output_raster_file = f'{path}.tif'
@@ -85,6 +86,7 @@ def save_as_img_with_normalization(image_tensor, path):
 
 
 def create_img_from_tensor(image,img_size): 
+
     image = (image - image.min()) / (image.max() - image.min())
     to_pil_image = transforms.ToPILImage()
 
@@ -93,7 +95,7 @@ def create_img_from_tensor(image,img_size):
         channel_image = to_pil_image(image[i])
         channel_image.save(f'{""}_channel_{i}.png')
          
-    image_np = image.permute(1, 2, 0).cpu().numpy()
+    image_np = image.permute(1, 2, 0).cpu().numpy() # [2,96,96] -> [96,96,2] permute channels only for matplotlib
       #add black channel so that it can be displayed(imshow requests 3 channels)
     black = np.zeros((img_size,img_size), dtype=np.uint8)
     image_np = np.dstack((image_np, black))
@@ -102,6 +104,9 @@ def create_img_from_tensor(image,img_size):
     return image_np
 
 def save_comparison_fig_from_tensor(final_images,target_images,img_size):  # final_image shape: [8,2,96,96]
+
+
+
     first_final_img = final_images[0]      # only print first of batch for now
     first_target_img = target_images[0]    # only print first of batch for now
 
@@ -153,9 +158,9 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            print("output shape in eval: ", output[0].shape)
+            create_raster_file_from_tensor(output[0], 'imgOut/output')
             #save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
-            print("target shape in eval: ", target[0].shape)
+            create_raster_file_from_tensor(target[0], 'imgOut/target')
             #save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
             #save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)

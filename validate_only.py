@@ -16,6 +16,8 @@ import os
 import time
 import datetime
 import json
+import rasterio
+
 
 import wandb
 import torch
@@ -34,6 +36,29 @@ import models_vit
 
 from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
+
+
+#TODO use to try to print target to see if it is correct , bc currently it is just green
+
+def create_raster_file_from_tensor(image_tensor, path):
+
+    image_tensor= image_tensor.permute(1, 2, 0).cpu().numpy()
+    output_raster_file = f'{path}.tif'
+    metadata = {
+    'driver': 'GTiff',
+    'count': image_tensor.shape[2],  # Number of channels/bands
+    'width': image_tensor.shape[1],  # Width of the raster
+    'height': image_tensor.shape[0],  # Height of the raster
+    'dtype': 'float32',  # Data type of the raster values
+    'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
+    'transform': rasterio.transform.from_origin(0, image_tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
+}
+
+    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
+        for i in range(image_tensor.shape[2]):
+             dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
+
+    print(f'Raster file saved to {output_raster_file}') 
 
 def create_img_from_tensor(image,img_size): 
     image = (image - image.min()) / (image.max() - image.min())
@@ -104,6 +129,8 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
+            create_raster_file_from_tensor(output[0], 'imgOut/output')
+            create_raster_file_from_tensor(target[0], 'imgOut/target')
             save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
 

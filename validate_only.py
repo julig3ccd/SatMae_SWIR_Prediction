@@ -215,7 +215,7 @@ def main(args):
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
     print("OWN DATASET  " ,dataset_val.df.head(10))
 
-    firstimg = data_loader_val.__getitem__(0)
+    firstimg = dataset_val.__getitem__(0)
     inputimg = firstimg[0]
     targetimg = firstimg[1]
     

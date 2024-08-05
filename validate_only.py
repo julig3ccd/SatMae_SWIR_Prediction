@@ -60,6 +60,30 @@ def create_raster_file_from_tensor(image_tensor, path):
 
     print(f'Raster file saved to {output_raster_file}') 
 
+def save_as_img_with_normalization(image_tensor, path):
+    tensor= image_tensor.permute(1, 2, 0).cpu().numpy()
+    tensor = (image_tensor * 255).astype(np.uint8)
+
+    output_raster_file = f'{path}.tif'
+
+    metadata = {
+    'driver': 'GTiff',
+    'count': tensor.shape[2],  # Number of channels/bands
+    'width': tensor.shape[1],  # Width of the raster
+    'height': tensor.shape[0],  # Height of the raster
+    'dtype': 'uint8',  # Data type of the raster values
+    'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
+    'transform': rasterio.transform.from_origin(0, tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
+}
+
+# Create and write to the raster file
+    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
+        for i in range(tensor.shape[2]):
+            dst.write(tensor[:, :, i], i + 1)  # Write each channel to a separate band
+
+    print(f'Raster file saved to {output_raster_file}')
+
+
 def create_img_from_tensor(image,img_size): 
     image = (image - image.min()) / (image.max() - image.min())
     to_pil_image = transforms.ToPILImage()
@@ -129,8 +153,8 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            create_raster_file_from_tensor(output[0], 'imgOut/output')
-            create_raster_file_from_tensor(target[0], 'imgOut/target')
+            save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
+            save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
             save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
 

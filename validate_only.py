@@ -55,10 +55,10 @@ class SentinelNormalizeRevert:
         x = x / 255.0 * (self.max_value - self.min_value) + self.min_value
         return x
 
-def save_as_img_with_normalization_revert(image_tensor, output_raster_file):
+def save_as_img_with_normalization_revert(image_tensor, output_raster_file): 
     # Revert normalization
 
-
+    assert (image_tensor.shape[0]>14, "image tensor bands are not in first index, not rasterio format")
     revert_normalization = SentinelNormalizeRevert(SentinelIndividualImageDataset.mean, SentinelIndividualImageDataset.std)
     
     # Convert torch tensor to numpy array if necessary
@@ -66,13 +66,13 @@ def save_as_img_with_normalization_revert(image_tensor, output_raster_file):
         image_tensor = image_tensor.detach().cpu().numpy()
     
     # Apply revert normalization to each channel
-    for i in range(image_tensor.shape[2]):
-        image_tensor[:, :, i] = revert_normalization(image_tensor[:, :, i])
+    for i in range(image_tensor.shape[0]):
+        image_tensor[i,:, :] = revert_normalization(image_tensor[i,:, :])
     
     # Define metadata for the new raster file
     metadata = {
         'driver': 'GTiff',
-        'count': image_tensor.shape[2],  # Number of channels/bands
+        'count': image_tensor.shape[0],  # Number of channels/bands
         'width': image_tensor.shape[1],  # Width of the raster
         'height': image_tensor.shape[0],  # Height of the raster
         'dtype': 'float32',  # Data type of the raster values
@@ -82,8 +82,8 @@ def save_as_img_with_normalization_revert(image_tensor, output_raster_file):
 
     # Create and write to the raster file
     with rasterio.open(output_raster_file, 'w', **metadata) as dst:
-        for i in range(image_tensor.shape[2]):
-            dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
+        for i in range(image_tensor.shape[0]):
+            dst.write(image_tensor[i:, :, ], i + 1)  # Write each channel to a separate band
 
     print(f'Raster file saved to {output_raster_file}')
 

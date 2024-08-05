@@ -153,9 +153,11 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
-            save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
-            save_comparison_fig_from_tensor(output,target,img_size=96)
+            print("output shape in eval: ", output[0].shape)
+            #save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
+            print("target shape in eval: ", target[0].shape)
+            #save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
+            #save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

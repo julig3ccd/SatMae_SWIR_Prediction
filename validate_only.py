@@ -7,7 +7,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 
 import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
-from util.datasets import SentinelIndividualImageDataset_OwnData
+from util.datasets import SentinelIndividualImageDataset_OwnData, SentinelIndividualImageDataset
 from util.datasets import (build_own_sentineldataset, build_fmow_dataset)
 import util.lr_decay as lrd
 
@@ -40,6 +40,55 @@ from util.pos_embed import interpolate_pos_embed
 
 #TODO use to try to print target to see if it is correct , bc currently it is just green
 
+
+class SentinelNormalizeRevert:
+    def __init__(self, mean, std):
+        self.mean = np.array(mean)
+        self.std = np.array(std)
+        self.min_value = self.mean - 2 * self.std
+        self.max_value = self.mean + 2 * self.std
+
+    def __call__(self, x):
+        # Ensure input is in float format
+        x = x.astype(np.float32)
+        # Revert normalization
+        x = x / 255.0 * (self.max_value - self.min_value) + self.min_value
+        return x
+
+def save_as_img_with_normalization_revert(image_tensor, output_raster_file):
+    # Revert normalization
+
+
+    revert_normalization = SentinelNormalizeRevert(SentinelIndividualImageDataset.mean, SentinelIndividualImageDataset.std)
+    
+    # Convert torch tensor to numpy array if necessary
+    if isinstance(image_tensor, torch.Tensor):
+        image_tensor = image_tensor.detach().cpu().numpy()
+    
+    # Apply revert normalization to each channel
+    for i in range(image_tensor.shape[2]):
+        image_tensor[:, :, i] = revert_normalization(image_tensor[:, :, i])
+    
+    # Define metadata for the new raster file
+    metadata = {
+        'driver': 'GTiff',
+        'count': image_tensor.shape[2],  # Number of channels/bands
+        'width': image_tensor.shape[1],  # Width of the raster
+        'height': image_tensor.shape[0],  # Height of the raster
+        'dtype': 'float32',  # Data type of the raster values
+        'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
+        'transform': rasterio.transform.from_origin(0, image_tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
+    }
+
+    # Create and write to the raster file
+    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
+        for i in range(image_tensor.shape[2]):
+            dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
+
+    print(f'Raster file saved to {output_raster_file}')
+
+
+
 def create_raster_file_from_tensor(image_tensor, path):
 
     image_tensor= image_tensor.cpu().numpy()
@@ -60,6 +109,7 @@ def create_raster_file_from_tensor(image_tensor, path):
              dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
 
     print(f'Raster file saved to {output_raster_file}') 
+
 
 def save_as_img_with_normalization(image_tensor, path):
     nptensor= image_tensor.cpu().numpy()
@@ -158,9 +208,9 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            create_raster_file_from_tensor(output[0], 'imgOut/output_without_transform')
+            save_as_img_with_normalization_revert(output[0], 'imgOut/output_with_normalization_rev')
             #save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
-            create_raster_file_from_tensor(target[0], 'imgOut/target_without_transform')
+            save_as_img_with_normalization_revert(target[0], 'imgOut/target_with_normalization_rev')
             #save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
             #save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
@@ -215,14 +265,14 @@ def main(args):
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
     print("OWN DATASET  " ,dataset_val.df.head(10))
 
-    firstimg = dataset_val.__getitem__(0)
-    print("FIRST IMG", firstimg)
-    inputimg = firstimg[0]
-    print("input img shape in OWN DATA", inputimg.shape)
-    targetimg = firstimg[1]
+    # firstimg = dataset_val.__getitem__(0)
+    # print("FIRST IMG", firstimg)
+    # inputimg = firstimg[0]
+    # print("input img shape in OWN DATA", inputimg.shape)
+    # targetimg = firstimg[1]
     
-    create_raster_file_from_tensor(inputimg, 'imgOut/input_after_dataset_creation')
-    create_raster_file_from_tensor(targetimg, 'imgOut/target_after_dataset_creation')
+    # create_raster_file_from_tensor(inputimg, 'imgOut/input_after_dataset_creation')
+    # create_raster_file_from_tensor(targetimg, 'imgOut/target_after_dataset_creation')
 
     
 

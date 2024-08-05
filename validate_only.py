@@ -216,7 +216,9 @@ def main(args):
     print("OWN DATASET  " ,dataset_val.df.head(10))
 
     firstimg = dataset_val.__getitem__(0)
+    print("FIRST IMG", firstimg)
     inputimg = firstimg[0]
+    print("input img shape in OWN DATA", inputimg.shape)
     targetimg = firstimg[1]
     
     create_raster_file_from_tensor(inputimg[0], 'imgOut/input_after_dataset_creation')

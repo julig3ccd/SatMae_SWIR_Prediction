@@ -97,9 +97,9 @@ def create_img_from_tensor(image,img_size):
          
     image_np = image.permute(1, 2, 0).cpu().numpy() # [2,96,96] -> [96,96,2] permute channels only for matplotlib
       #add black channel so that it can be displayed(imshow requests 3 channels)
-    black = np.zeros((img_size,img_size), dtype=np.uint8)
-    image_np = np.dstack((image_np, black))
-    image_np = image_np.astype(np.float32)
+    # black = np.zeros((img_size,img_size), dtype=np.uint8)
+    # image_np = np.dstack((image_np, black))
+    # image_np = image_np.astype(np.float32)
 
     return image_np
 
@@ -133,7 +133,7 @@ def save_comparison_fig_from_tensor(final_images,target_images,img_size):  # fin
 #customized evaluate function to evaluate accuracy of swir prediction not classification
 @torch.no_grad()
 def evaluate(data_loader, model, device):
-
+    
 ##### 1.rewrite criterion to mean squared error
     criterion = torch.nn.MSELoss()
 
@@ -158,9 +158,9 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            create_raster_file_from_tensor(output[0], 'imgOut/output')
+            create_raster_file_from_tensor(output[0], 'imgOut/output_without_transform')
             #save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
-            create_raster_file_from_tensor(target[0], 'imgOut/target')
+            create_raster_file_from_tensor(target[0], 'imgOut/target_without_transform')
             #save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
             #save_comparison_fig_from_tensor(output,target,img_size=96)
             loss = criterion(output, target)
@@ -214,6 +214,14 @@ def main(args):
     
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
     print("OWN DATASET  " ,dataset_val.df.head(10))
+
+    firstimg = data_loader_val.__getitem__(0)
+    inputimg = firstimg[0]
+    targetimg = firstimg[1]
+    
+    create_raster_file_from_tensor(inputimg[0], 'imgOut/input_after_dataset_creation')
+    create_raster_file_from_tensor(targetimg[0], 'imgOut/target_after_dataset_creation')
+
     
 
     #not used anyways for now, but needs to be changed for actual training

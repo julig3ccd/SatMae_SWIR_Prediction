@@ -43,7 +43,6 @@ from util.pos_embed import interpolate_pos_embed
 
 
 def create_img_from_tensor(image): 
-    print(image.shape, image)
     image = image.cpu().numpy()
     npimgtransposed = np.transpose(image, (1, 2, 0))
     stacked_image = np.zeros((npimgtransposed.shape[0], npimgtransposed.shape[1], 3))
@@ -100,13 +99,11 @@ def evaluate(data_loader, model, device):
     for batch in metric_logger.log_every(data_loader, 10, header):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
-        print("this should be the input", batch[0].shape)
-        print("this should be the target", batch[-1].shape, batch[-1])
+
 
 ##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
 
         target = batch[-1]
-        print('images [0] shape -->' ,images[0].shape ,'images [-1] shape -->',images[-1].shape, 'target shape [-1] --> ',target[-1].shape, 'target shape [0] --> ',target[0].shape)
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 
@@ -114,7 +111,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_comparison_fig_from_tensor(output,target,'comparison_fig_with_adapted_masked_bands')
+            save_comparison_fig_from_tensor(output,target,'comparison_fig')
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

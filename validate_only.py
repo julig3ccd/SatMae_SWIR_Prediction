@@ -55,7 +55,7 @@ def create_img_from_tensor(image):
 
     return stacked_image
 
-def save_comparison_fig_from_tensor(final_images,target_images):  # final_image shape: [8,2,96,96]
+def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_image shape: [8,2,96,96]
 
 
 
@@ -79,7 +79,7 @@ def save_comparison_fig_from_tensor(final_images,target_images):  # final_image 
     ax[1].set_title('Target')
     ax[1].axis('off')  # Hide axes
 
-    plt.savefig(f'imgOut/comparison.png')
+    plt.savefig(f'imgOut/{name}.png')
     
 
 #customized evaluate function to evaluate accuracy of swir prediction not classification

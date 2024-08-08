@@ -96,12 +96,12 @@ def evaluate(data_loader, model, device):
     # switch to evaluation mode
     model.eval()
 
-    print("this should be the input", batch[0].shape)
-    print("this should be the target", batch[-1].shape, batch[-1])
 
     for batch in metric_logger.log_every(data_loader, 10, header):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
+        print("this should be the input", batch[0].shape)
+        print("this should be the target", batch[-1].shape, batch[-1])
 
 ##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
 

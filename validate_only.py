@@ -110,7 +110,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_comparison_fig_from_tensor(output,target, 'imgOut/comparison_fig_with_adapted_masked_bands')
+            save_comparison_fig_from_tensor(output,target,'comparison_fig_with_adapted_masked_bands')
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

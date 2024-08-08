@@ -8,7 +8,6 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 from util.datasets import SentinelIndividualImageDataset_OwnData, SentinelIndividualImageDataset, SentinelNormalizeRevert, build_fmow_dataset, build_own_sentineldataset
-from util.datasets import (build_own_sentineldataset, build_fmow_dataset)
 import util.lr_decay as lrd
 
 import numpy as np
@@ -48,10 +47,9 @@ def create_img_from_tensor(image):
     stacked_image = np.zeros((npimgtransposed.shape[0], npimgtransposed.shape[1], 3))
     
     # Assign the red channel to the first channel
-    stacked_image[:, :, 0] = npimgtransposed[:,:,0]
-
+    np.copyto(stacked_image[:, :, 0], npimgtransposed[:,:,0])
     # Assign the green channel to the second channel
-    stacked_image[:, :, 1] = npimgtransposed[:,:,1]
+    np.copyto(stacked_image[:, :, 1], npimgtransposed[:,:,1])
 
     return stacked_image
 
@@ -82,6 +80,40 @@ def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_i
     plt.savefig(f'imgOut/{name}.png')
     
 
+def min_mse_per_batch(output, target):
+    """
+    Computes the lowest Mean Squared Error (MSE) for each sample in the batch.
+
+    Args:
+        output (torch.Tensor): Model output of shape [batch_size, num_channels, height, width]
+        target (torch.Tensor): Target tensor of shape [batch_size, num_channels, height, width]
+
+    Returns:
+        min_mse (torch.Tensor): Tensor of shape [batch_size] containing the lowest MSE for each sample in the batch.
+    """
+    batch_size = output.size(0)
+    
+    # Initialize tensor to store MSE values
+    mse_values = torch.zeros(batch_size, dtype=torch.float32, device=output.device)
+    
+    for i in range(batch_size):
+        # Get the output and target for the current sample
+        output_sample = output[i]
+        target_sample = target[i]
+        
+        # Compute MSE for the current sample
+        mse = torch.nn.MSELoss(output_sample, target_sample, reduction='none')
+        mse_flat = mse.view(-1)
+        
+        # Compute the minimum MSE for the current sample
+        min_mse = mse_flat.min()
+        
+        # Store the minimum MSE in the tensor
+        mse_values[i] = min_mse
+    
+    return mse_values
+
+
 #customized evaluate function to evaluate accuracy of swir prediction not classification
 @torch.no_grad()
 def evaluate(data_loader, model, device):
@@ -96,7 +128,7 @@ def evaluate(data_loader, model, device):
     model.eval()
 
 
-    for batch in metric_logger.log_every(data_loader, 10, header):
+    for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
 
@@ -111,30 +143,26 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_comparison_fig_from_tensor(output,target,'comparison_fig')
+            save_comparison_fig_from_tensor(output,target,f'comparison_fig_{idx}')
             loss = criterion(output, target)
 
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+        print(min_mse_per_batch(output, target))
+        # metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
+        # metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
     # gather the stats from all processes
-    metric_logger.synchronize_between_processes()
-    print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-          .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+    #metric_logger.synchronize_between_processes()
+    # print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
+    #       .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
 
-
-
-
-
-#create sentinelindivudualdataset from own data
 
 def main(args):
 
@@ -164,22 +192,8 @@ def main(args):
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
     print("OWN DATASET  " ,dataset_val.df.head(10))
 
-    # firstimg = dataset_val.__getitem__(0)
-    # print("FIRST IMG", firstimg)
-    # inputimg = firstimg[0]
-    # print("input img shape in OWN DATA", inputimg.shape)
-    # targetimg = firstimg[1]
-    
-    # create_raster_file_from_tensor(inputimg, 'imgOut/input_after_dataset_creation')
-    # create_raster_file_from_tensor(targetimg, 'imgOut/target_after_dataset_creation')
+    dataset_train = build_own_sentineldataset(is_train=True, args=args)
 
-    
-
-    #not used anyways for now, but needs to be changed for actual training
-    #dataset_train = build_fmow_dataset(is_train=True, args=args)
-
-    #taken out of if so it can be used for evaluation case
-    #directly using sequentialsampler bc eval only (set if True for training)
     
     global_rank = misc.get_rank()
     if False:  # args.distributed:
@@ -200,7 +214,7 @@ def main(args):
         else:
             sampler_val = torch.utils.data.SequentialSampler(dataset_val)
     else:
-        #sampler_train = torch.utils.data.RandomSampler(dataset_train)
+        sampler_train = torch.utils.data.RandomSampler(dataset_train)
         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
     if global_rank == 0 and args.log_dir is not None and not args.eval:
@@ -220,13 +234,13 @@ def main(args):
     )
     
     ##not used for now ppbly needs to be changed for actual training
-    #data_loader_train = torch.utils.data.DataLoader(
-    #   dataset_train, sampler=sampler_train,
-    #    batch_size=args.batch_size,
-     #   num_workers=args.num_workers,
-      #  pin_memory=args.pin_mem,
-       # drop_last=True,
-    #)
+    data_loader_train = torch.utils.data.DataLoader(
+      dataset_train, sampler=sampler_train,
+       batch_size=args.batch_size,
+       num_workers=args.num_workers,
+       pin_memory=args.pin_mem,
+       drop_last=True,
+    )
 
 
     mixup_fn = None
@@ -369,7 +383,7 @@ def main(args):
     if True:
         test_stats = evaluate(data_loader_val, model, device)
         print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
-              f"acc5: {test_stats['acc5']:.2f}%")
+              )
         exit(0)
 
     print(f"Start training for {args.epochs} epochs")

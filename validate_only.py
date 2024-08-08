@@ -43,6 +43,7 @@ from util.pos_embed import interpolate_pos_embed
 
 
 def create_img_from_tensor(image): 
+    print(image.shape, image)
     image = image.cpu().numpy()
     npimgtransposed = np.transpose(image, (1, 2, 0))
     stacked_image = np.zeros((npimgtransposed.shape[0], npimgtransposed.shape[1], 3))

@@ -716,9 +716,9 @@ class EuroSat(SatelliteDataset):
 
 def build_own_sentineldataset(is_train: bool, args) -> SatelliteDataset:
 
-    mean = SentinelIndividualImageDataset.mean
-    std = SentinelIndividualImageDataset.std
-    transform = SentinelIndividualImageDataset.build_transform(is_train, args.input_size, mean, std)
+    mean = SentinelIndividualImageDataset_OwnData.mean
+    std = SentinelIndividualImageDataset_OwnData.std
+    transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, mean, std)
     dataset = SentinelIndividualImageDataset_OwnData(args.directory_path, transform, masked_bands=args.masked_bands,
                                                  dropped_bands=args.dropped_bands)
     print(dataset)

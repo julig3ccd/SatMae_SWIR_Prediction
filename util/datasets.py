@@ -361,6 +361,22 @@ class SentinelNormalize:
         img = (x - min_value) / (max_value - min_value) * 255.0
         img = np.clip(img, 0, 255).astype(np.uint8)
         return img
+    
+
+
+class SentinelNormalizeRevert:
+    def __init__(self, mean, std):
+        self.mean = np.array(mean)
+        self.std = np.array(std)
+        self.min_value = self.mean - 2 * self.std
+        self.max_value = self.mean + 2 * self.std
+
+    def __call__(self, x):
+        # Ensure input is in float format
+        x = x.astype(np.float32)
+        # Revert normalization
+        x = x / 255.0 * (self.max_value - self.min_value) + self.min_value
+        return x
 
 
 class SentinelIndividualImageDataset(SatelliteDataset):
@@ -573,20 +589,21 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         #take only the last two channels as target
         #targetImages = inputImages[:, :,[11,12]] 
         #mask out bands of input image 
+
+
+        #TODO check if transformed tensor should be used for target img or not
+        inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
+        
+        targetImage_as_tensor = inputImg_as_tensor[[11,12],:,:]  # (c, h, w)
+    
         if self.masked_bands is not None:
             #TODO decide whether to use mean or 0 for masking
             #inputImages[:, :, self.masked_bands] = np.array(self.mean)[self.masked_bands]
-            inputImages[:, :, self.masked_bands] = 0
+            inputImg_as_tensor[self.masked_bands, :, :] = 0
 
 
         #labels = self.categories.index(selection['category'])
         
-        #TODO check if transformed tensor should be used for target img or not
-        inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
-        print("input images tensor shape in getitem: ",inputImg_as_tensor.shape)
-        
-        targetImage_as_tensor = inputImg_as_tensor[[11,12],:,:]  # (c, h, w)
-        print("target images shape in getitem: ",targetImage_as_tensor.shape)
 
         if self.dropped_bands is not None:
             keep_idxs = [i for i in range(img_as_tensor.shape[0]) if i not in self.dropped_bands]

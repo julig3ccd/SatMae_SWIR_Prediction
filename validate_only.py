@@ -7,7 +7,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 
 import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
-from util.datasets import SentinelIndividualImageDataset_OwnData, SentinelIndividualImageDataset
+from util.datasets import SentinelIndividualImageDataset_OwnData, SentinelIndividualImageDataset, SentinelNormalizeRevert, build_fmow_dataset, build_own_sentineldataset
 from util.datasets import (build_own_sentineldataset, build_fmow_dataset)
 import util.lr_decay as lrd
 
@@ -38,122 +38,24 @@ from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
 
 
-#TODO use to try to print target to see if it is correct , bc currently it is just green
 
 
-class SentinelNormalizeRevert:
-    def __init__(self, mean, std):
-        self.mean = np.array(mean)
-        self.std = np.array(std)
-        self.min_value = self.mean - 2 * self.std
-        self.max_value = self.mean + 2 * self.std
 
-    def __call__(self, x):
-        # Ensure input is in float format
-        x = x.astype(np.float32)
-        # Revert normalization
-        x = x / 255.0 * (self.max_value - self.min_value) + self.min_value
-        return x
 
-def save_as_img_with_normalization_revert(image_tensor, output_raster_file): 
-    # Revert normalization
+def create_img_from_tensor(image): 
 
-    assert (image_tensor.shape[0]>14, "image tensor bands are not in first index, not rasterio format")
-    revert_normalization = SentinelNormalizeRevert(SentinelIndividualImageDataset.mean, SentinelIndividualImageDataset.std)
+    npimgtransposed = np.transpose(image, (1, 2, 0))
+    stacked_image = np.zeros((npimgtransposed.shape[0], npimgtransposed.shape[1], 3))
     
-    # Convert torch tensor to numpy array if necessary
-    if isinstance(image_tensor, torch.Tensor):
-        image_tensor = image_tensor.detach().cpu().numpy()
-    
-    # Apply revert normalization to each channel
-    for i in range(image_tensor.shape[0]):
-        image_tensor[i,:, :] = revert_normalization(image_tensor[i,:, :])
-    
-    # Define metadata for the new raster file
-    metadata = {
-        'driver': 'GTiff',
-        'count': image_tensor.shape[0],  # Number of channels/bands
-        'width': image_tensor.shape[1],  # Width of the raster
-        'height': image_tensor.shape[0],  # Height of the raster
-        'dtype': 'float32',  # Data type of the raster values
-        'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
-        'transform': rasterio.transform.from_origin(0, image_tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
-    }
+    # Assign the red channel to the first channel
+    stacked_image[:, :, 0] = npimgtransposed[:,:,0]
 
-    # Create and write to the raster file
-    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
-        for i in range(image_tensor.shape[0]):
-            dst.write(image_tensor[i:, :, ], i + 1)  # Write each channel to a separate band
+    # Assign the green channel to the second channel
+    stacked_image[:, :, 1] = npimgtransposed[:,:,1]
 
-    print(f'Raster file saved to {output_raster_file}')
+    return stacked_image
 
-
-
-def create_raster_file_from_tensor(image_tensor, path):
-
-    image_tensor= image_tensor.cpu().numpy()
-    print("image tensor type before raster file creation", image_tensor.dtype, image_tensor.shape)
-    output_raster_file = f'{path}.tif'
-    metadata = {
-    'driver': 'GTiff',
-    'count': image_tensor.shape[0],  # Number of channels/bands
-    'width': image_tensor.shape[1],  # Width of the raster
-    'height': image_tensor.shape[2],  # Height of the raster
-    'dtype': 'float32',  # Data type of the raster values
-    'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
-     # Affine transform (replace as needed)
-}
-
-    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
-        for i in range(image_tensor.shape[0]):
-             dst.write(image_tensor[:, :, i], i + 1)  # Write each channel to a separate band
-
-    print(f'Raster file saved to {output_raster_file}') 
-
-
-def save_as_img_with_normalization(image_tensor, path):
-    nptensor= image_tensor.cpu().numpy()
-    tensor = (nptensor * 255).astype(np.uint8)
-
-    output_raster_file = f'{path}.tif'
-
-    metadata = {
-    'driver': 'GTiff',
-    'count': tensor.shape[2],  # Number of channels/bands
-    'width': tensor.shape[1],  # Width of the raster
-    'height': tensor.shape[0],  # Height of the raster
-    'dtype': 'uint8',  # Data type of the raster values
-    'crs': 'EPSG:4326',  # Coordinate Reference System (replace as needed)
-    'transform': rasterio.transform.from_origin(0, tensor.shape[0], 1, 1)  # Affine transform (replace as needed)
-}
-
-# Create and write to the raster file
-    with rasterio.open(output_raster_file, 'w', **metadata) as dst:
-        for i in range(tensor.shape[2]):
-            dst.write(tensor[:, :, i], i + 1)  # Write each channel to a separate band
-
-    print(f'Raster file saved to {output_raster_file}')
-
-
-def create_img_from_tensor(image,img_size): 
-
-    image = (image - image.min()) / (image.max() - image.min())
-    to_pil_image = transforms.ToPILImage()
-
-    # Convert each channel to a PIL image and show
-    for i in range(image.size(0)):  # Loop through channels
-        channel_image = to_pil_image(image[i])
-        channel_image.save(f'{""}_channel_{i}.png')
-         
-    image_np = image.permute(1, 2, 0).cpu().numpy() # [2,96,96] -> [96,96,2] permute channels only for matplotlib
-      #add black channel so that it can be displayed(imshow requests 3 channels)
-    # black = np.zeros((img_size,img_size), dtype=np.uint8)
-    # image_np = np.dstack((image_np, black))
-    # image_np = image_np.astype(np.float32)
-
-    return image_np
-
-def save_comparison_fig_from_tensor(final_images,target_images,img_size):  # final_image shape: [8,2,96,96]
+def save_comparison_fig_from_tensor(final_images,target_images):  # final_image shape: [8,2,96,96]
 
 
 
@@ -161,8 +63,8 @@ def save_comparison_fig_from_tensor(final_images,target_images,img_size):  # fin
     first_target_img = target_images[0]    # only print first of batch for now
 
     # Normalize to [0, 1] for visualization if necessary
-    output = create_img_from_tensor(first_final_img,img_size)
-    target = create_img_from_tensor(first_target_img,img_size)
+    output = create_img_from_tensor(first_final_img)
+    target = create_img_from_tensor(first_target_img)
 
 
     # Display the image using matplotlib
@@ -208,11 +110,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_as_img_with_normalization_revert(output[0], 'imgOut/output_with_normalization_rev')
-            #save_as_img_with_normalization(output[0], 'imgOut/output_normalized_to_rgb')
-            save_as_img_with_normalization_revert(target[0], 'imgOut/target_with_normalization_rev')
-            #save_as_img_with_normalization(target[0], 'imgOut/target_normalized_to_rgb')
-            #save_comparison_fig_from_tensor(output,target,img_size=96)
+            save_comparison_fig_from_tensor(output,target, 'imgOut/comparison_fig_with_adapted_masked_bands')
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

@@ -94,7 +94,7 @@ def min_mse_per_batch(output, target):
     batch_size = output.size(0)
     
     # Initialize tensor to store MSE values
-    mse_values = torch.zeros(batch_size, dtype=torch.float32, device=output.device)
+    mse_values = torch.zeros(batch_size, 2,dtype=torch.float32, device=output.device)
     print(mse_values.shape)
     
     for i in range(batch_size):
@@ -107,12 +107,13 @@ def min_mse_per_batch(output, target):
         mse_flat = mse.flatten(1,-1)
 
         # Compute the minimum MSE for the current sample
-        avg_mse_channel_one = mse_flat[0].avg()
-        avg_mse_channel_two = mse_flat[1].avg()
+        avg_mse_channel_one = torch.mean(mse_flat[0])
+        avg_mse_channel_two = torch.mean(mse_flat[1])
         # Store the minimum MSE in the tensor
-        #mse_values[i] = min_mse
-    
-    #return mse_values
+        mse_values[i:0] = avg_mse_channel_one
+        mse_values[i:1] = avg_mse_channel_two
+
+    return mse_values
 
 
 #customized evaluate function to evaluate accuracy of swir prediction not classification

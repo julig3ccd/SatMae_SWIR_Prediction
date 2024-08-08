@@ -103,8 +103,10 @@ def min_mse_per_batch(output, target):
         
         # Compute MSE for the current sample
         mse = torch.nn.functional.mse_loss(output_sample, target_sample, reduction='none')
-        mse_flat = mse.view(-1)
-        
+        print("MSE", mse.shape,mse)
+        mse_flat = mse.flatten(-1)
+        print("MSE FLAT", mse_flat.shape,mse_flat)
+
         # Compute the minimum MSE for the current sample
         min_mse = mse_flat.min()
         

@@ -59,7 +59,7 @@ def create_img_from_tensor(image):
 def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_image shape: [8,2,96,96]
 
 
-
+    
     first_final_img = final_images[0]      # only print first of batch for now
     first_target_img = target_images[0]    # only print first of batch for now
 
@@ -95,6 +95,9 @@ def evaluate(data_loader, model, device):
 
     # switch to evaluation mode
     model.eval()
+
+    print("this should be the input", batch[0].shape)
+    print("this should be the target", batch[-1].shape, batch[-1])
 
     for batch in metric_logger.log_every(data_loader, 10, header):
 #####2. provide images with cropped swir channels as input        

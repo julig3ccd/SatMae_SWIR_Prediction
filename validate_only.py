@@ -95,7 +95,6 @@ def min_mse_per_batch(output, target):
     
     # Initialize tensor to store MSE values
     mse_values = torch.zeros(batch_size, 2,dtype=torch.float32, device=output.device)
-    print(mse_values.shape)
     
     for i in range(batch_size):
         # Get the output and target for the current sample
@@ -145,7 +144,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_comparison_fig_from_tensor(output,target,f'comparison_fig_{idx}')
+            #save_comparison_fig_from_tensor(output,target,f'comparison_fig_{idx}')
             loss = criterion(output, target)
 
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -153,7 +152,7 @@ def evaluate(data_loader, model, device):
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        print(min_mse_per_batch(output, target))
+        # print(min_mse_per_batch(output, target))
         # metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         # metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
     # gather the stats from all processes
@@ -384,6 +383,7 @@ def main(args):
     # if args.eval: #set to true for now since we are only evaluating
     if True:
         test_stats = evaluate(data_loader_val, model, device)
+        print("TEST STATS: ", test_stats) 
         print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
               )
         exit(0)

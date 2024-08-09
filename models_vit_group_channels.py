@@ -33,16 +33,16 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
         patch_size = kwargs['patch_size']
         in_c = kwargs['in_chans']
         embed_dim = kwargs['embed_dim']
-        print("embed_dim as parameter for patch_embed", embed_dim)
+        #print("embed_dim as parameter for patch_embed", embed_dim)
         self.channel_groups = channel_groups
         
-        print("patch size input for patch embedding", patch_size)
-        print("img size input for patch embedding", img_size)
+        #print("patch size input for patch embedding", patch_size)
+        #print("img size input for patch embedding", img_size)
         self.patch_embed = nn.ModuleList([PatchEmbed(img_size, patch_size, len(group), embed_dim)
                                           for group in channel_groups])
         # self.patch_embed = PatchEmbed(img_size, patch_size, 1, embed_dim)
         num_patches = self.patch_embed[0].num_patches
-        print("num_patches", num_patches)
+        #print("num_patches", num_patches)
         # Positional and channel embed
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim - channel_embed))
         pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], int(num_patches ** .5), cls_token=True)
@@ -66,8 +66,8 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
             del self.norm  # remove the original norm      
 
-        print("pos_embed in init", self.pos_embed.shape)
-        print("channel_embed in init", self.channel_embed.shape)
+        #print("pos_embed in init", self.pos_embed.shape)
+        #print("channel_embed in init", self.channel_embed.shape)
         #init decoder
         unet_like_decoder = decoder.Decoder(embed_dim, len(channel_groups[2]))
         
@@ -81,7 +81,7 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
     def forward_features(self, x):
         b, c, h, w = x.shape
-        print("input shape", x.shape)
+        #print("input shape", x.shape)
 
         x_c_embed = []
         for i, group in enumerate(self.channel_groups):
@@ -95,17 +95,17 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         # add channel embed
         channel_embed = self.channel_embed.unsqueeze(2)  # (1, c, 1, cD)
-        print("channel_embed", channel_embed.shape)
+        #print("channel_embed", channel_embed.shape)
         pos_embed = self.pos_embed[:, 1:, :].unsqueeze(1)  # (1, 1, L, pD)
-        print("pos_embed", pos_embed.shape)
+        #print("pos_embed", pos_embed.shape)
 
         # Channel embed same across (x,y) position, and pos embed same across channel (c)
         channel_embed = channel_embed.expand(-1, -1, pos_embed.shape[2], -1)  # (1, c, L, cD)
-        print("channel_embed after expand", channel_embed.shape)
+        #print("channel_embed after expand", channel_embed.shape)
         pos_embed = pos_embed.expand(-1, channel_embed.shape[1], -1, -1)  # (1, c, L, pD)
-        print("pos_embed after expand", pos_embed.shape)
+        #print("pos_embed after expand", pos_embed.shape)
         pos_channel = torch.cat((pos_embed, channel_embed), dim=-1)  # (1, c, L, D)
-        print("pos_channel", pos_channel.shape)
+        #print("pos_channel", pos_channel.shape)
          
 
         # 96px (input size) /  8 (batch size) = 12 px (patch size)
@@ -128,35 +128,35 @@ class GroupChannelsVisionTransformer(timm.models.vision_transformer.VisionTransf
 
         # add pos embed w/o cls token
         x = x + pos_channel  # (N, G, L, D) # (batch, group, token seqeuence length, dim)
-        print("before x.view(b,-1,D)",x.shape) #shape = ([8, 3, 144, 1024])
+        #print("before x.view(b,-1,D)",x.shape) #shape = ([8, 3, 144, 1024])
         x = x.view(b, -1, D)  # (N, G*L, D) # 3 groups (G) * 144 tokens (L) = 432 tokens
-        print("after pos embed",x.shape) #shape ([8, 432, 1024]) 
+        #print("after pos embed",x.shape) #shape ([8, 432, 1024]) 
         cls_pos_channel = torch.cat((self.pos_embed[:, :1, :], self.channel_cls_embed), dim=-1)  # (1, 1, D)
         # stole cls_tokens impl from Phil Wang, thanks
         cls_tokens = cls_pos_channel + self.cls_token.expand(b, -1, -1)
 
 
         x = torch.cat((cls_tokens, x), dim=1)  # (N, 1 + c*L, D) concat the cls_token to the beginning of the sequence (seq is first dim)
-        print("after concat cls_tokens, x" , x.shape)
+        #print("after concat cls_tokens, x" , x.shape)
         x = self.pos_drop(x)
 
         for blk in self.blocks:
             x = blk(x)
         #shape ([8, 433, 1024])    
-        print("after blocks",x.shape)    
+        #print("after blocks",x.shape)    
 
         if self.global_pool:
             x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
             outcome = self.fc_norm(x)
         else:
             x = self.norm(x)
-            print("after norm", x.shape)
+            #print("after norm", x.shape)
             #outcome = x[:, 0]
             #print("outcome shape" , outcome.shape, outcome)
             
             #outcome_head = self.head(x.view(b, h, w, -1).permute(0, 3, 1, 2))
             #print("outcome with modified head shape", outcome_head.shape)
-        print("input for reshape", x.shape)
+        #print("input for reshape", x.shape)
         swir_tokens = x[:, -144:, :]
         swir_tokens_reshaped_for_decoder=decoder.reshape_vit_output(swir_tokens)
         #shape ([8, 144, 1024])

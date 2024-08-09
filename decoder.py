@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# Define a simple U-Net-like decoder
+# simple U-Net-like decoder
 class Decoder(nn.Module):
     def __init__(self, embed_dim, output_channels):
         super(Decoder, self).__init__()
@@ -22,25 +22,25 @@ class Decoder(nn.Module):
 
 
     def forward(self, x):
-        print("decoder input", x.shape) #([8, 1024, 12, 12])   
+        #print("decoder input", x.shape) #([8, 1024, 12, 12])   
         # Upsample progressively
         x = F.relu(self.conv1(x))  # 12x12 -> 12x12     --> ([8, 512, 12, 12])
-        print( "after relu 1", x.shape)
+        #print( "after relu 1", x.shape)
         x = self.upconv1(x)        # 12x12 -> 24x24     -->  ([8, 256, 24, 24])
-        print( "after upconv1", x.shape)
+        #print( "after upconv1", x.shape)
         x = F.relu(self.conv2(x))  # 24x24 -> 24x24     -->  ([8, 128, 24, 24]) 
-        print( "after relu 2", x.shape)
+        #print( "after relu 2", x.shape)
         x = self.upconv2(x)        # 24x24 -> 48x48     -->  ([8, 64, 48, 48])
-        print( "after upconv2", x.shape)
+        #print( "after upconv2", x.shape)
         x = F.relu(self.conv3(x))  # 48x48 -> 48x48     -->  ([8, 32, 48, 48]) 
-        print( "after relu 3", x.shape)
+        #print( "after relu 3", x.shape)
         x = self.upconv3(x)        # 48x48 -> 96x96     -->  ([8, 16, 96, 96])
-        print( "after upconv3", x.shape)
-        x = F.relu(self.conv4(x))  # 96x96 -> 96x96     -->  ([8, 8, 96, 96])
-        print( "after relu 4", x.shape)
+        #print( "after upconv3", x.shape)
+        x = F.relu(self.conv4(x))  # 96x96 -> 96x96     
+        #print( "after relu 4", x.shape)                # -->  ([8, 8, 96, 96])
     
-        x = self.conv5(x)          # 96x96 -> 96x96   -->  ([8, 2, 192, 192])
-        print( "after conv5", x.shape)
+        x = self.conv5(x)          # 96x96 -> 96x96   
+        #print( "after conv5", x.shape)                 # -->  ([8, 2, 96, 96])
         return x
 
 # Assuming `vit_output` is the output from the ViT with shape [8, 144, 1024]

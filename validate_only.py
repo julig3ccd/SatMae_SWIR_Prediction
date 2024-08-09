@@ -100,7 +100,7 @@ def min_mse_per_batch(output, target):
         # Get the output and target for the current sample
         output_sample = output[i]
         target_sample = target[i]
-        
+        #TODO verify that it compares not the whole batch but a single image
         # Compute MSE for the current sample
         mse = torch.nn.functional.mse_loss(output_sample, target_sample, reduction='none')
         mse_flat = mse.flatten(1,-1)

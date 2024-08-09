@@ -192,7 +192,7 @@ def main(args):
     
     dataset_val = build_own_sentineldataset(is_train=False, args=args)
     print("OWN DATASET  " ,dataset_val.df.head(10))
-
+    #TODO devide dataset into train and val
     dataset_train = build_own_sentineldataset(is_train=True, args=args)
 
     
@@ -234,7 +234,6 @@ def main(args):
         drop_last=False
     )
     
-    ##not used for now ppbly needs to be changed for actual training
     data_loader_train = torch.utils.data.DataLoader(
       dataset_train, sampler=sampler_train,
        batch_size=args.batch_size,
@@ -359,14 +358,14 @@ def main(args):
 
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr)
     loss_scaler = NativeScaler()
-
-    if mixup_fn is not None:
-        # smoothing is handled with mixup label transform
-        criterion = SoftTargetCrossEntropy()
-    elif args.smoothing > 0.:
-        criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
-    else:
-        criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.MSELoss()
+    # if mixup_fn is not None:
+    #     # smoothing is handled with mixup label transform
+    #     criterion = SoftTargetCrossEntropy()
+    # elif args.smoothing > 0.:
+    #     criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
+    # else:
+    #     criterion = torch.nn.CrossEntropyLoss()
 
     print("criterion = %s" % str(criterion))
 
@@ -381,12 +380,12 @@ def main(args):
 
     
     # if args.eval: #set to true for now since we are only evaluating
-    if True:
-        test_stats = evaluate(data_loader_val, model, device)
-        print("TEST STATS: ", test_stats) 
-        print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
-              )
-        exit(0)
+    # if True:
+    #     test_stats = evaluate(data_loader_val, model, device)
+    #     print("TEST STATS: ", test_stats) 
+    #     print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
+    #           )
+    #     exit(0)
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
@@ -416,17 +415,18 @@ def main(args):
             misc.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch)
+            print("saved model to ", args.output_dir)
 
         
         test_stats = evaluate(data_loader_val, model, device)
 
-        print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
-        max_accuracy = max(max_accuracy, test_stats["acc1"])
-        print(f'Max accuracy: {max_accuracy:.2f}%')
+        # print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
+        # max_accuracy = max(max_accuracy, test_stats["acc1"])
+        # print(f'Max accuracy: {max_accuracy:.2f}%')
 
         if log_writer is not None:
-            log_writer.add_scalar('perf/test_acc1', test_stats['acc1'], epoch)
-            log_writer.add_scalar('perf/test_acc5', test_stats['acc5'], epoch)
+            # log_writer.add_scalar('perf/test_acc1', test_stats['acc1'], epoch)
+            # log_writer.add_scalar('perf/test_acc5', test_stats['acc5'], epoch)
             log_writer.add_scalar('perf/test_loss', test_stats['loss'], epoch)
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},

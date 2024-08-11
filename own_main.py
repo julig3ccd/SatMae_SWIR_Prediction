@@ -145,7 +145,7 @@ def evaluate(data_loader, model, device):
             output = model(images)
             save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
             loss = criterion(output, target)
-            print("loss in autocast " , loss, autoflush=True)
+            print("loss in autocast " , loss)
 
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)

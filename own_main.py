@@ -319,34 +319,34 @@ def main(args):
         # manually initialize fc layer
         # remove trunc_normal for model.head.weight since weights are initalized in the decoder module
         #trunc_normal_(model.head.weight, std=2e-5)
-    elif args.eval :
-        checkpoint = torch.load(args.resume, map_location='cpu')
+    # elif args.eval :
+    #     checkpoint = torch.load(args.resume, map_location='cpu')
 
-        print("Load pre-trained checkpoint from: %s" % args.resume)
-        checkpoint_model = checkpoint['model']
-        state_dict = model.state_dict()
+    #     print("Load pre-trained checkpoint from: %s" % args.resume)
+    #     checkpoint_model = checkpoint['model']
+    #     state_dict = model.state_dict()
 
-        # Do something smarter?
-        for k in ['pos_embed', 'patch_embed.proj.weight', 
-                  'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight','head.weight','head.bias']:
-            if (k in checkpoint_model and k not in state_dict) or (k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape):
-                print(f"Removing key {k} from pretrained checkpoint")
-                del checkpoint_model[k]
+    #     # Do something smarter?
+    #     for k in ['pos_embed', 'patch_embed.proj.weight', 
+    #               'patch_embed.proj.bias','patch_embed.0.proj.weight','patch_embed.1.proj.weight','patch_embed.2.proj.weight','head.weight','head.bias']:
+    #         if (k in checkpoint_model and k not in state_dict) or (k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape):
+    #             print(f"Removing key {k} from pretrained checkpoint")
+    #             del checkpoint_model[k]
 
-        # interpolate position embedding
-        interpolate_pos_embed(model, checkpoint_model)
+    #     # interpolate position embedding
+    #     interpolate_pos_embed(model, checkpoint_model)
 
-        # load pre-trained model
-        msg = model.load_state_dict(checkpoint_model, strict=False)
-        print(msg)
+    #     # load pre-trained model
+    #     msg = model.load_state_dict(checkpoint_model, strict=False)
+    #     print(msg)
 
-        #  change assert msg based on patch_embed
-        if args.global_pool:
-            print(set(msg.missing_keys))
-            # assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
-        else:
-            print(set(msg.missing_keys))
-            # assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
+    #     #  change assert msg based on patch_embed
+    #     if args.global_pool:
+    #         print(set(msg.missing_keys))
+    #         # assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
+    #     else:
+    #         print(set(msg.missing_keys))
+    #         # assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
 
 
     model.to(device)

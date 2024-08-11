@@ -117,7 +117,7 @@ def min_mse_per_batch(output, target):
 
 #customized evaluate function to evaluate accuracy of swir prediction not classification
 @torch.no_grad()
-def evaluate(data_loader, model, device):
+def evaluate(data_loader, model, device, print_comparison=False):
     
 ##### 1.rewrite criterion to mean squared error
     criterion = torch.nn.MSELoss()
@@ -144,7 +144,7 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            if args.print_comparison:
+            if print_comparison:
               save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
             loss = criterion(output, target)
             print("loss in autocast " , loss)

@@ -56,28 +56,27 @@ def create_img_from_tensor(image):
 def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_image shape: [8,2,96,96]
 
 
+    # first_final_img = final_images[0]      # only print first of batch for now
+    # first_target_img = target_images[0]
     
-    first_final_img = final_images[0]      # only print first of batch for now
-    first_target_img = target_images[0]    # only print first of batch for now
+    for idx, img in enumerate(final_images) :
+    
+        output = create_img_from_tensor(img)
+        target = create_img_from_tensor(target_images[idx])
 
-    # Normalize to [0, 1] for visualization if necessary
-    output = create_img_from_tensor(first_final_img)
-    target = create_img_from_tensor(first_target_img)
+        # Display the image using matplotlib
+         #print("image shape: ", image_np.shape)
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5)) 
+        ax[0].imshow(output) 
+        ax[0].set_title('Output')
+        ax[0].axis('off')  # Hide axes
 
+        # Plot the 'target' image
+        ax[1].imshow(target) 
+        ax[1].set_title('Target')
+        ax[1].axis('off')  # Hide axes
 
-    # Display the image using matplotlib
-    #print("image shape: ", image_np.shape)
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5)) 
-    ax[0].imshow(output) 
-    ax[0].set_title('Output')
-    ax[0].axis('off')  # Hide axes
-
-# Plot the 'target' image
-    ax[1].imshow(target) 
-    ax[1].set_title('Target')
-    ax[1].axis('off')  # Hide axes
-
-    plt.savefig(f'imgOut/{name}.png')
+        plt.savefig(f'imgOut/{name}_img_{idx}.png')
     
 
 def min_mse_per_batch(output, target):
@@ -144,8 +143,9 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            #save_comparison_fig_from_tensor(output,target,f'comparison_fig_{idx}')
+            save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
             loss = criterion(output, target)
+            print("loss in autocast " , loss, autoflush=True)
 
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)
@@ -379,13 +379,12 @@ def main(args):
         wandb.watch(model)
 
     
-    # if args.eval: #set to true for now since we are only evaluating
-    # if True:
-    #     test_stats = evaluate(data_loader_val, model, device)
-    #     print("TEST STATS: ", test_stats) 
-    #     print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
-    #           )
-    #     exit(0)
+    if args.eval: #set to true for now since we are only evaluating
+        test_stats = evaluate(data_loader_val, model, device)
+        print("TEST STATS: ", test_stats) 
+        print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
+              )
+        exit(0)
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()

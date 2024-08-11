@@ -535,8 +535,10 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
     def __init__(self,
                  directory_path: str,
                  transform: Any,
+                 is_train:Optional[bool],
                  masked_bands: Optional[List[int]] = None,
-                 dropped_bands: Optional[List[int]] = None):
+                 dropped_bands: Optional[List[int]] = None,
+                 ):
         """
         Creates dataset for multi-spectral single image swir prediction.
         Usually used for fMoW-Sentinel dataset.
@@ -552,8 +554,14 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
         # create path strings for all tiff files in directory
         fileData = []
+        #TODO devide dataset into train and val
         img_id = 0
-        for file in os.listdir(directory_path):
+        directory_list = os.listdir(directory_path)
+
+        if is_train is False:
+            directory_list = directory_list[:50] # set the to 50 for now so comparison figs are not too many
+
+        for file in directory_list:
             if file.endswith(".tiff"):
                 currentFileData= (directory_path+"/"+file, img_id)
                 fileData.append(currentFileData)
@@ -720,7 +728,7 @@ def build_own_sentineldataset(is_train: bool, args) -> SatelliteDataset:
     std = SentinelIndividualImageDataset_OwnData.std
     transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, mean, std)
     dataset = SentinelIndividualImageDataset_OwnData(args.directory_path, transform, masked_bands=args.masked_bands,
-                                                 dropped_bands=args.dropped_bands)
+                                                 dropped_bands=args.dropped_bands, is_train=is_train)
     print(dataset)
 
     return dataset

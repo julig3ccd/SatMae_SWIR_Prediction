@@ -158,6 +158,7 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--eval', default=False, action='store_true',
                         help='Perform evaluation only')
+    parser.add_argument('--print_comparison', default=False, action='store_true',)
     parser.add_argument('--dist_eval', action='store_true', default=False,
                         help='Enabling distributed evaluation (recommended during training for faster monitor')
     parser.add_argument('--num_workers', default=10, type=int)

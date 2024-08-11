@@ -77,6 +77,7 @@ def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_i
         ax[1].axis('off')  # Hide axes
 
         plt.savefig(f'imgOut/{name}_img_{idx}.png')
+        plt.close()
     
 
 def min_mse_per_batch(output, target):
@@ -143,7 +144,8 @@ def evaluate(data_loader, model, device):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
+            if args.print_comparison:
+              save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
             loss = criterion(output, target)
             print("loss in autocast " , loss)
 
@@ -409,7 +411,7 @@ def main(args):
 
     
     if args.eval: #set to true for now since we are only evaluating
-        test_stats = evaluate(data_loader_val, model, device)
+        test_stats = evaluate(data_loader_val, model, device, args.print_comparison)
         print("TEST STATS: ", test_stats) 
         print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
               )

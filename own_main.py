@@ -146,6 +146,7 @@ def evaluate(data_loader, model, device, print_comparison=False):
             output = model(images)
             if print_comparison:
               save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
+              print('saved comparison figures for batch ',idx)
             loss = criterion(output, target)
             #print("loss in autocast " , loss)
 
@@ -412,9 +413,7 @@ def main(args):
     
     if args.eval: #set to true for now since we are only evaluating
         test_stats = evaluate(data_loader_val, model, device, args.print_comparison)
-        print("TEST STATS: ", test_stats) 
-        print(f"Evaluation on {len(dataset_val)} test images- acc1: {test_stats['acc1']:.2f}%, "
-              )
+        print(f"Evaluation on {len(dataset_val)} --> TEST STATS: ", test_stats) 
         exit(0)
 
     print(f"Start training for {args.epochs} epochs")
@@ -448,7 +447,7 @@ def main(args):
             print("saved model to ", args.output_dir)
 
         
-        test_stats = evaluate(data_loader_val, model, device)
+        test_stats = evaluate(data_loader_val, model, device, args.print_comparison)
 
         # print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
         # max_accuracy = max(max_accuracy, test_stats["acc1"])

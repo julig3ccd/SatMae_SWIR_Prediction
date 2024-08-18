@@ -86,6 +86,7 @@ def get_args_parser():
                         help="Which bands (0 indexed) to drop from sentinel data.")
     parser.add_argument('--grouped_bands', type=int, nargs='+', action='append',
                         default=[], help="Bands to group for GroupC mae")
+    parser.add_argument('--directory_path', default="/../../nfs/data3/CNLNG/", type=str, help='Data Directory path')
 
     parser.add_argument('--output_dir', default='./output_dir',
                         help='path where to save, empty for no saving')
@@ -110,7 +111,7 @@ def get_args_parser():
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
-    parser.add_argument('--local_rank', default=os.getenv('LOCAL_RANK', 0), type=int)  # prev default was -1
+    parser.add_argument('--local-rank', default=os.getenv('LOCAL_RANK', 0), type=int)  # prev default was -1
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')

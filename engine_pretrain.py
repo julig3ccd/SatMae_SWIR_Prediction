@@ -41,7 +41,9 @@ def train_one_epoch(model: torch.nn.Module,
         print("SAMPLES / MODEL INPUT SHAPE: ", samples.shape)
         print("FIRST SAMPLE SHAPE : ", samples[0].shape)
         with torch.cuda.amp.autocast():
-            loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
+            loss, pred, mask = model(samples, mask_ratio=args.mask_ratio)
+            print("PRED SHAPE: ", pred.shape)
+            print("MASK SHAPE: ", mask.shape)
 
         loss_value = loss.item()
 

@@ -628,8 +628,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         
 
         if self.dropped_bands is not None:
-            keep_idxs = [i for i in range(img_as_tensor.shape[0]) if i not in self.dropped_bands]
-            img_as_tensor = img_as_tensor[keep_idxs, :, :]
+            keep_idxs = [i for i in range(inputImg_as_tensor.shape[0]) if i not in self.dropped_bands]
+            inputImg_as_tensor = inputImg_as_tensor[keep_idxs, :, :]
 
         sample = {
             'inputImg_as_tensor': inputImg_as_tensor,

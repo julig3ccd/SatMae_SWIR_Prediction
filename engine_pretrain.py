@@ -38,7 +38,8 @@ def train_one_epoch(model: torch.nn.Module,
             lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
 
         samples = samples.to(device, non_blocking=True)
-
+        print("SAMPLES / MODEL INPUT SHAPE: ", samples.shape)
+        print("FIRST SAMPLE SHAPE : ", samples[0].shape)
         with torch.cuda.amp.autocast():
             loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
 

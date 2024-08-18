@@ -542,8 +542,9 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         """
         Creates dataset for multi-spectral single image swir prediction.
         Usually used for fMoW-Sentinel dataset.
-        :param csv_path: path to csv file.
+        :param directory_path: path to directory containing tiff files.
         :param transform: pytorch Transform for transforms and tensor conversion
+        :param is_train: whether to use train or val data
         :param masked_bands: List of indices corresponding to which bands to mask out
         :param dropped_bands:  List of indices corresponding to which bands to drop from input image tensor
         """
@@ -638,6 +639,41 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
             #'timestamps': selection['timestamp']
         }
         return inputImg_as_tensor, targetImage_as_tensor
+    
+    def get_raster_meta(self,img_path):
+        with rasterio.open(img_path) as data:
+            print("RASTER META DATA", data.meta)
+
+    
+    
+    def get_channel_means(self):
+        img_list= [self.open_image(img_path) for img_path in self.df['image_path']]
+        print("IMAGE LIST LEN: ",len(img_list))
+        print("DF LEN: ",len(self.df))
+        img_list_means=torch.zeros(1,13)
+        for i, img in enumerate(img_list):
+            print("IMG SHAPE: ",img.shape)
+            img_means = torch.zeros(1,13)
+            print("img means tensor ",img_means)
+            imgTensor = torch.from_numpy(img)
+
+            for j, channel in enumerate(range(imgTensor.shape[2])):
+                print("CHANNEL SHAPE: ",imgTensor[:,:,channel].shape)
+                channel = imgTensor[:,:,channel]
+                flatTensor = channel.flatten(0)
+                print("FLAT TENSOR SHAPE",flatTensor.shape)   
+                local_channel_mean = torch.mean(flatTensor)
+                print("LOCAL CHANNEL MEAN: ",local_channel_mean)
+                img_means[:,j] = local_channel_mean
+            print("img means: ",img_means)
+            img_list_means = torch.stack((img_list_means,img_means),0)
+
+        print("IMG LIST MEANS", img_list_means.shape)
+        means=torch.mean(img_list_means,0)
+        print("MEANS SHAPE: ",means.shape, "MEANS: ",means)
+        return means
+
+           
 
     @staticmethod
     def build_transform(is_train, input_size, mean, std):
@@ -769,6 +805,12 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
         from util.naip_loader import NAIP_train_dataset, NAIP_test_dataset, NAIP_CLASS_NUM
         dataset = NAIP_train_dataset if is_train else NAIP_test_dataset
         args.nb_classes = NAIP_CLASS_NUM
+    elif args.dataset_type == 'sentinel_own_data': 
+        mean, std = SentinelIndividualImageDataset_OwnData.mean, SentinelIndividualImageDataset_OwnData.std
+        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, mean, std)
+        dataset = SentinelIndividualImageDataset_OwnData(args.directory_path, transform, masked_bands=args.masked_bands,
+                                                 dropped_bands=args.dropped_bands, is_train=is_train)
+
     else:
         raise ValueError(f"Invalid dataset type: {args.dataset_type}")
     print(dataset)

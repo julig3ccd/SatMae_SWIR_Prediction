@@ -11,13 +11,14 @@ import wandb
 
 import util.misc as misc
 import util.lr_sched as lr_sched
+from util.print import save_comparison_fig_from_tensor
 
 
 def train_one_epoch(model: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler,
                     log_writer=None,
-                    args=None):
+                    args=None, print_comparison=False):
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -42,9 +43,17 @@ def train_one_epoch(model: torch.nn.Module,
         #print("FIRST SAMPLE SHAPE : ", samples[0].shape) --> ([10, 96, 96])
         with torch.cuda.amp.autocast():
             loss, pred, mask = model(samples, mask_ratio=args.mask_ratio)
-            #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64])
+            #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #print("MASK SHAPE: ", mask.shape) --> ([16, 3, 144])
 
+        if print_comparison:
+            if data_iter_step % 50 == 0:
+                predImages =pred.view(16,10,12,12,8,8)
+                predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()
+                predImages = predImages.view(16,10,96,96)
+                save_comparison_fig_from_tensor(predImages,f'comparison_fig_b_{data_iter_step}',num_channels=10)
+                print('saved comparison figures for batch ',data_iter_step)
+        
         loss_value = loss.item()
 
         if not math.isfinite(loss_value):

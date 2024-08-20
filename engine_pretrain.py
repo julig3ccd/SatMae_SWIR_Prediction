@@ -46,12 +46,11 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
             pred = pred.permute(0, 1, 2, 4, 3, 5).contiguous()
             pred = pred.view(16,10,96,96)
             swirpred = pred[:,[8,9],:,:]
-            #TODO see if indexing works with [8,9] or -2
             loss = criterion(swirpred, swir_targets)
             #print("loss in autocast " , loss)
 
         if print_comparison:
-              if idx % 50 == 0:
+              if idx % 100 == 0:
                 save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=10)
                 print('saved comparison figures for batch ',idx)
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -103,14 +102,14 @@ def train_one_epoch(model: torch.nn.Module,
             #print("MASK SHAPE: ", mask.shape) --> ([16, 3, 144])
 
 
-        if args.print_comparison:
-                print("DATA_ITER_STEP: " ,data_iter_step)
-                predImages = pred.view(16,10,12,12,8,8)
-                predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()
-                predImages = predImages.view(16,10,96,96)
-                predImages = predImages.detach()
-                save_comparison_fig_from_tensor(predImages,f'comparison_fig_b_{data_iter_step}',num_channels=10)
-                print('saved comparison figures for batch ',data_iter_step)
+        # if args.print_comparison:
+        #         print("DATA_ITER_STEP: " ,data_iter_step)
+        #         predImages = pred.view(16,10,12,12,8,8)
+        #         predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()
+        #         predImages = predImages.view(16,10,96,96)
+        #         predImages = predImages.detach()
+        #         save_comparison_fig_from_tensor(predImages,f'comparison_fig_b_{data_iter_step}',num_channels=10)
+        #         print('saved comparison figures for batch ',data_iter_step)
 
         
         loss_value = loss.item()

@@ -104,11 +104,12 @@ def train_one_epoch(model: torch.nn.Module,
 
         if print_comparison:
             if data_iter_step % 50 == 0:
-                predImages =pred.view(16,10,12,12,8,8)
+                predImages = pred.view(16,10,12,12,8,8)
                 predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()
                 predImages = predImages.view(16,10,96,96)
                 save_comparison_fig_from_tensor(predImages,f'comparison_fig_b_{data_iter_step}',num_channels=10)
                 print('saved comparison figures for batch ',data_iter_step)
+
         
         loss_value = loss.item()
 

@@ -239,7 +239,7 @@ def main(args):
         wandb.watch(model)
 
     if args.eval:
-        evaluate(model, data_loader_val, print_comparison=True,device=device)    
+        evaluate(data_loader=data_loader_val, model=model, print_comparison=True,device=device)    
         print("exit because eval mode only is set")
         exit(0)
 

@@ -35,84 +35,11 @@ import models_vit
 
 from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
+from util.print import save_comparison_fig_from_tensor
 
 
 
 
-
-
-def create_img_from_tensor(image): 
-    image = image.cpu().numpy()
-    npimgtransposed = np.transpose(image, (1, 2, 0))
-    stacked_image = np.zeros((npimgtransposed.shape[0], npimgtransposed.shape[1], 3))
-    
-    # Assign the red channel to the first channel
-    np.copyto(stacked_image[:, :, 0], npimgtransposed[:,:,0])
-    # Assign the green channel to the second channel
-    np.copyto(stacked_image[:, :, 1], npimgtransposed[:,:,1])
-
-    return stacked_image
-
-def save_comparison_fig_from_tensor(final_images,target_images,name):  # final_image shape: [8,2,96,96]
-
-
-    # first_final_img = final_images[0]      # only print first of batch for now
-    # first_target_img = target_images[0]
-    
-    for idx, img in enumerate(final_images) :
-    
-        output = create_img_from_tensor(img)
-        target = create_img_from_tensor(target_images[idx])
-
-        # Display the image using matplotlib
-         #print("image shape: ", image_np.shape)
-        fig, ax = plt.subplots(1, 2, figsize=(10, 5)) 
-        ax[0].imshow(output) 
-        ax[0].set_title('Output')
-        ax[0].axis('off')  # Hide axes
-
-        # Plot the 'target' image
-        ax[1].imshow(target) 
-        ax[1].set_title('Target')
-        ax[1].axis('off')  # Hide axes
-
-        plt.savefig(f'imgOut/{name}_img_{idx}.png')
-        plt.close()
-    
-
-def min_mse_per_batch(output, target):
-    """
-    Computes the lowest Mean Squared Error (MSE) for each sample in the batch.
-
-    Args:
-        output (torch.Tensor): Model output of shape [batch_size, num_channels, height, width]
-        target (torch.Tensor): Target tensor of shape [batch_size, num_channels, height, width]
-
-    Returns:
-        min_mse (torch.Tensor): Tensor of shape [batch_size] containing the lowest MSE for each sample in the batch.
-    """
-    batch_size = output.size(0)
-    
-    # Initialize tensor to store MSE values
-    mse_values = torch.zeros(batch_size, 2,dtype=torch.float32, device=output.device)
-    
-    for i in range(batch_size):
-        # Get the output and target for the current sample
-        output_sample = output[i]
-        target_sample = target[i]
-        #TODO verify that it compares not the whole batch but a single image
-        # Compute MSE for the current sample
-        mse = torch.nn.functional.mse_loss(output_sample, target_sample, reduction='none')
-        mse_flat = mse.flatten(1,-1)
-
-        # Compute the minimum MSE for the current sample
-        avg_mse_channel_one = torch.mean(mse_flat[0])
-        avg_mse_channel_two = torch.mean(mse_flat[1])
-        # Store the minimum MSE in the tensor
-        mse_values[i:0] = avg_mse_channel_one
-        mse_values[i:1] = avg_mse_channel_two
-
-    return mse_values
 
 
 #customized evaluate function to evaluate accuracy of swir prediction not classification

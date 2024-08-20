@@ -163,12 +163,12 @@ def main(args):
     else:
         log_writer = None
 
-    if args.eval:
-         
-         dataset_val = build_fmow_dataset(is_train=False, args=args)
-         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    
+        
+    dataset_val = build_fmow_dataset(is_train=False, args=args)
+    sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-         data_loader_val = torch.utils.data.DataLoader(
+    data_loader_val = torch.utils.data.DataLoader(
             dataset_val, sampler=sampler_val,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
@@ -238,6 +238,11 @@ def main(args):
         wandb.config.update(args)
         wandb.watch(model)
 
+    if args.eval:
+        evaluate(model, data_loader_val, print_comparison=True,device=device)    
+        print("exit because eval mode only is set")
+        exit(0)
+
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     print("START epoch : ", args.start_epoch )
@@ -280,8 +285,7 @@ def main(args):
             except ValueError:
                 print(f"Invalid stats?")
 
-    if args.eval:
-        evaluate(model, data_loader_val, print_comparison=True,device=device)
+    evaluate(model, data_loader_val, print_comparison=True,device=device)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))

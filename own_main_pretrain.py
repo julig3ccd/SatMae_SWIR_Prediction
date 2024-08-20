@@ -61,7 +61,7 @@ def get_args_parser():
                         help='Use (per-patch) normalized pixels as targets for computing loss')
     parser.set_defaults(norm_pix_loss=False)
 
-    parser.add_argument('--print_comparison', action='store_true', default=False)
+    #parser.add_argument('--print_comparison', action='store_true', default=False)
 
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,
@@ -76,7 +76,7 @@ def get_args_parser():
 
     parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
                         help='epochs to warmup LR')
-    parser.add_argument('--eval', action='store_true', default=False)
+    #parser.add_argument('--eval', action='store_true', default=False)
 
     # Dataset parameters
     parser.add_argument('--train_path', default='/home/train_62classes.csv', type=str,

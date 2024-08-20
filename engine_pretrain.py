@@ -104,7 +104,7 @@ def train_one_epoch(model: torch.nn.Module,
 
 
         if print_comparison:
-            if data_iter_step % 100 == 0:
+                print("DATA_ITER_STEP: " ,data_iter_step)
                 predImages = pred.view(16,10,12,12,8,8)
                 predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()
                 predImages = predImages.view(16,10,96,96)

@@ -55,7 +55,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
 
         if print_comparison:
               if idx % 100 == 0:
-                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=10)
+                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=2)
                 print('saved comparison figures for batch ',idx)
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)

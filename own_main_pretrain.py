@@ -61,9 +61,7 @@ def get_args_parser():
                         help='Use (per-patch) normalized pixels as targets for computing loss')
     parser.set_defaults(norm_pix_loss=False)
 
-    parser.add_argument('--print_comparison', default=False, action='store_true')
-
-
+    parser.add_argument('--print_comparison', action='store_true', fefault=False)
 
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,

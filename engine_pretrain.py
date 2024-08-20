@@ -30,6 +30,10 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
     for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
+        #TODO check if channels are cropped
+        if idx==0:
+            inputswir = images[0,[8,9],:,:]   # first image of batch, only swir channels, all spatial dimensions
+            print("THESE ARE THE SWIR CHANNELS IN THE INPUT: ", inputswir)
 
 
 ##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)

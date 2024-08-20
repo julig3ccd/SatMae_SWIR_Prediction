@@ -777,7 +777,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     :param args: Argparser args object with provided arguments
     :return: SatelliteDataset object.
     """
-    csv_path = os.path.join(args.train_path if is_train else args.test_path)
+    csv_path = os.path.join(args.train_path if is_train else args.val_path)
     #TODO see if this works 
     directory_path = os.path.join(args.train_path if is_train else args.val_path)
 

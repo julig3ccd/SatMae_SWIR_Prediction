@@ -27,7 +27,7 @@ def save_comparison_fig_from_tensor(final_images,name,num_channels=2, target_ima
     
         output = create_swir_img_from_tensor(img, num_channels)
         if target_images is not None:
-            target = create_swir_img_from_tensor(target_images[idx],num_channels)
+            target = create_swir_img_from_tensor(target_images[idx],num_channels=2) #target still has 2 channels
 
         # Display the image using matplotlib
          #print("image shape: ", image_np.shape)

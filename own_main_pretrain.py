@@ -61,7 +61,7 @@ def get_args_parser():
                         help='Use (per-patch) normalized pixels as targets for computing loss')
     parser.set_defaults(norm_pix_loss=False)
 
-    parser.add_argument('--print_comparison', default=False, action='store_true',)
+    parser.add_argument('--print_comparison', default=False, action='store_true')
 
 
 
@@ -94,6 +94,7 @@ def get_args_parser():
     parser.add_argument('--grouped_bands', type=int, nargs='+', action='append',
                         default=[], help="Bands to group for GroupC mae")
     #parser.add_argument('--directory_path', default="/../../nfs/data3/CNLNG/", type=str, help='Data Directory path')
+
 
     parser.add_argument('--output_dir', default='./output_dir',
                         help='path where to save, empty for no saving')

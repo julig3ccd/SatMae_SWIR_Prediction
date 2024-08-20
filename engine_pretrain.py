@@ -13,6 +13,62 @@ import util.misc as misc
 import util.lr_sched as lr_sched
 from util.print import save_comparison_fig_from_tensor
 
+@torch.no_grad()
+def evaluate(data_loader, model, device, print_comparison=False, args=None):
+    
+##### 1.rewrite criterion to mean squared error
+    criterion = torch.nn.MSELoss()
+
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    header = 'Test:'
+
+    # switch to evaluation mode
+    #TODO see if mae even has .eval()
+    #model.eval()
+
+
+    for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
+#####2. provide images with cropped swir channels as input        
+        images = batch[0]
+
+
+##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
+
+        swir_targets = batch[-1]
+        images = images.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True)
+
+        # print("before pass model")
+        # compute output
+        with torch.cuda.amp.autocast():
+            _, pred, mask = model(images, mask_ratio=args.mask_ratio)
+            pred = pred.view(16,10,12,12,8,8)
+            pred = pred.permute(0, 1, 2, 4, 3, 5).contiguous()
+            pred = pred.view(16,10,96,96)
+            swirpred = pred[:,[8,9],:,:]
+            #TODO see if indexing works with [8,9] or -2
+            loss = criterion(swirpred, swir_targets)
+            #print("loss in autocast " , loss)
+
+        if print_comparison:
+              if idx % 50 == 0:
+                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=10)
+                print('saved comparison figures for batch ',idx)
+        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # print(acc1, acc5, flush=True)
+
+        batch_size = images.shape[0]
+        metric_logger.update(loss=loss.item())
+        # print(min_mse_per_batch(output, target))
+        # metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
+        # metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+    # gather the stats from all processes
+    #metric_logger.synchronize_between_processes()
+    # print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
+    #       .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
 
 def train_one_epoch(model: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,

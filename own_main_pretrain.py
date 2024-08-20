@@ -30,7 +30,7 @@ import models_mae
 import models_mae_group_channels
 import models_mae_temporal
 
-from engine_pretrain import train_one_epoch, train_one_epoch_temporal
+from engine_pretrain import train_one_epoch, train_one_epoch_temporal, evaluate
 
 
 def get_args_parser():
@@ -61,6 +61,10 @@ def get_args_parser():
                         help='Use (per-patch) normalized pixels as targets for computing loss')
     parser.set_defaults(norm_pix_loss=False)
 
+    parser.add_argument('--print_comparison', default=False, action='store_true',)
+
+
+
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
@@ -74,9 +78,12 @@ def get_args_parser():
 
     parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
                         help='epochs to warmup LR')
+    parser.add_argument('--eval', action='store_true', default=False)
 
     # Dataset parameters
     parser.add_argument('--train_path', default='/home/train_62classes.csv', type=str,
+                        help='Train .csv path')
+    parser.add_argument('--val_path', default='/home/train_62classes.csv', type=str,
                         help='Train .csv path')
     parser.add_argument('--dataset_type', default='rgb', choices=['rgb', 'temporal', 'sentinel', 'euro_sat', 'naip', 'sentinel_own_data'],
                         help='Whether to use fmow rgb, sentinel, or other dataset.')
@@ -86,7 +93,7 @@ def get_args_parser():
                         help="Which bands (0 indexed) to drop from sentinel data.")
     parser.add_argument('--grouped_bands', type=int, nargs='+', action='append',
                         default=[], help="Bands to group for GroupC mae")
-    parser.add_argument('--directory_path', default="/../../nfs/data3/CNLNG/", type=str, help='Data Directory path')
+    #parser.add_argument('--directory_path', default="/../../nfs/data3/CNLNG/", type=str, help='Data Directory path')
 
     parser.add_argument('--output_dir', default='./output_dir',
                         help='path where to save, empty for no saving')
@@ -119,6 +126,7 @@ def get_args_parser():
     return parser
 
 
+
 def main(args):
     misc.init_distributed_mode(args)
 
@@ -136,6 +144,8 @@ def main(args):
 
     dataset_train = build_fmow_dataset(is_train=True, args=args)
     print(dataset_train)
+
+
     global_rank = misc.get_rank()
 
     if False:  # args.distributed:
@@ -153,6 +163,19 @@ def main(args):
         log_writer = SummaryWriter(log_dir=args.log_dir)
     else:
         log_writer = None
+
+    if args.eval:
+         
+         dataset_val = build_fmow_dataset(is_train=False, args=args)
+         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+
+         data_loader_val = torch.utils.data.DataLoader(
+            dataset_val, sampler=sampler_val,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            pin_memory=args.pin_mem,
+            drop_last=False
+        )    
 
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=sampler_train,
@@ -218,7 +241,8 @@ def main(args):
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
-    print( "START epoch : ", args.start_epoch , range(args.start_epoch, args.epochs))
+    print("START epoch : ", args.start_epoch )
+    print("RANGE : " ,range(args.start_epoch, args.epochs))
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
@@ -256,6 +280,9 @@ def main(args):
                 wandb.log(log_stats)
             except ValueError:
                 print(f"Invalid stats?")
+
+    if args.eval:
+        evaluate(model, data_loader_val, print_comparison=True,device=device)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))

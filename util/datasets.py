@@ -778,6 +778,8 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     :return: SatelliteDataset object.
     """
     csv_path = os.path.join(args.train_path if is_train else args.test_path)
+    #TODO see if this works 
+    directory_path = os.path.join(args.train_path if is_train else args.val_path)
 
     if args.dataset_type == 'rgb':
         mean = CustomDatasetFromImages.mean
@@ -808,7 +810,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     elif args.dataset_type == 'sentinel_own_data': 
         mean, std = SentinelIndividualImageDataset_OwnData.mean, SentinelIndividualImageDataset_OwnData.std
         transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, mean, std)
-        dataset = SentinelIndividualImageDataset_OwnData(args.directory_path, transform, masked_bands=args.masked_bands,
+        dataset = SentinelIndividualImageDataset_OwnData(directory_path, transform, masked_bands=args.masked_bands,
                                                  dropped_bands=args.dropped_bands, is_train=is_train)
 
     else:

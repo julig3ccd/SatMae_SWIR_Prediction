@@ -103,8 +103,7 @@ def train_one_epoch(model: torch.nn.Module,
             #print("MASK SHAPE: ", mask.shape) --> ([16, 3, 144])
 
 
-        #if print_comparison:
-        if True:
+        if print_comparison:
             if data_iter_step % 100 == 0:
                 predImages = pred.view(16,10,12,12,8,8)
                 predImages = predImages.permute(0, 1, 2, 4, 3, 5).contiguous()

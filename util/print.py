@@ -14,6 +14,7 @@ def create_swir_img_from_tensor(image, num_channels):
         # Assign the green channel to the second channel
         np.copyto(stacked_image[:, :, 1], npimgtransposed[:,:,1])
     elif num_channels == 10:
+    
         # Assign the red channel to the first channel
         np.copyto(stacked_image[:, :, 0], npimgtransposed[:,:,8])
         # Assign the green channel to the second channel
@@ -81,7 +82,9 @@ def save_comparison_fig_from_tensor(final_swir_images ,name ,num_channels=2, tar
         if mask is not None:
             ax[2].imshow(masked_input)
             ax[2].set_title('Masked Input')
-            ax[2].axis('off')    
+            ax[2].axis('off')   
+
+        fig.suptitle("SWIR Channel Comparison", fontsize=16)     
 
         plt.savefig(f'imgOut/{name}_img_{idx}.png')
         plt.close()

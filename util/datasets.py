@@ -559,9 +559,6 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         img_id = 0
         directory_list = os.listdir(directory_path)
 
-        if is_train is False:
-            directory_list = directory_list[:50] # set the to 50 for now so comparison figs are not too many
-
         for file in directory_list:
             if file.endswith(".tiff"):
                 currentFileData= (directory_path+"/"+file, img_id)

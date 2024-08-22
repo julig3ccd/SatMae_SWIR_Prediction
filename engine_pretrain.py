@@ -47,7 +47,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         # compute output
         with torch.cuda.amp.autocast():
             _, pred, mask = model(images, mask_ratio=args.mask_ratio)
-            #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
+            print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             swirpred = pred.view(16,10,12,12,8,8)
             swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
             swirpred = swirpred.view(16,10,96,96)

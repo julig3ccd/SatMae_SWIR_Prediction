@@ -53,7 +53,7 @@ def save_comparison_fig_from_tensor(final_swir_images ,name ,num_channels=2, tar
             target = create_swir_img_from_tensor(target_images[idx],num_channels=2) #target still has 2 channels
         
         if mask is not None:
-            masked_input=get_masked_input_img_from_tensor(input[idx],mask)
+            masked_input=get_masked_input_img_from_tensor(input[idx],mask[idx])
 
 
         # Display the image using matplotlib

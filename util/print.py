@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage.transform import resize
 
 
 def create_swir_img_from_tensor(image, num_channels): 
@@ -33,7 +34,7 @@ def get_masked_input_img_from_tensor(input,mask):
     binary_mask = get_binary_swir_mask_from_tensor(mask)               #shape [12,12]
     
     # resize the binary mask to [96, 96] (nearest-neighbor interpolation)
-    resized_mask = np.resize(binary_mask, (96, 96), order=0, preserve_range=True)
+    resized_mask = resize(binary_mask, (96, 96), order=0, preserve_range=True)
 
     # Apply the resized mask to the image
     # Remember, zeros are 'keep', so no need to invert the mask

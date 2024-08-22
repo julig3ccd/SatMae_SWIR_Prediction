@@ -684,7 +684,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
            
 
     @staticmethod
-    def build_transform(is_train, input_size, mean, std):
+    def build_transform(is_train, input_size, mean=None, std=None):
         # train transform
         interpol_mode = transforms.InterpolationMode.BICUBIC
 
@@ -816,8 +816,8 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
         dataset = NAIP_train_dataset if is_train else NAIP_test_dataset
         args.nb_classes = NAIP_CLASS_NUM
     elif args.dataset_type == 'sentinel_own_data': 
-        mean, std = SentinelIndividualImageDataset_OwnData.mean, SentinelIndividualImageDataset_OwnData.std
-        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, mean, std)
+        #mean, std = SentinelIndividualImageDataset_OwnData.mean, SentinelIndividualImageDataset_OwnData.std
+        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size)
         dataset = SentinelIndividualImageDataset_OwnData(directory_path, transform, masked_bands=args.masked_bands,
                                                  dropped_bands=args.dropped_bands, is_train=is_train)
 

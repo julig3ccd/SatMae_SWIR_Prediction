@@ -24,7 +24,6 @@ def create_swir_img_from_tensor(image, num_channels):
 
 def get_binary_swir_mask_from_tensor(mask):  # mask shape: [3,144] - [Channel Groups, 12*12 patches] - [:,i] --> has 0 (keep) or 1 (masked)
     mask =mask.cpu().numpy()
-    print("MASK SHAPE", mask.shape)
     swir_mask = mask[2,:].reshape(12,12)
     
     return swir_mask
@@ -56,6 +55,8 @@ def save_comparison_fig_from_tensor(final_swir_images ,name ,num_channels=2, tar
         
         if mask is not None:
             masked_input=get_masked_input_img_from_tensor(input[idx],mask[idx])
+            # masked_input=mask[idx,2,:].cpu().numpy()
+            # masked_input = masked_input.reshape(12,12)
 
 
         # Display the image using matplotlib

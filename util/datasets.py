@@ -361,8 +361,19 @@ class SentinelNormalize:
         img = (x - min_value) / (max_value - min_value) * 255.0
         img = np.clip(img, 0, 255).astype(np.uint8)
         return img
-    
 
+class SentinelNormalize_PerImage:    
+
+    def __call__(self, x, *args, **kwargs):
+        # Calculate mean and standard deviation per channel
+        mean = np.mean(x, axis=(1, 2), keepdims=True)
+        std = np.std(x, axis=(1, 2), keepdims=True)
+
+        min_value = mean - 2 * std
+        max_value = mean + 2 * std
+        img = (x - min_value) / (max_value - min_value) * 255.0
+        img = np.clip(img, 0, 255).astype(np.uint8)
+        return img
 
 class SentinelNormalizeRevert:
     def __init__(self, mean, std):
@@ -679,7 +690,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
         t = []
         if is_train:
-            t.append(SentinelNormalize(mean, std))  # use specific Sentinel normalization to avoid NaN
+            t.append(SentinelNormalize_PerImage())  # use specific Sentinel normalization to avoid NaN
             t.append(transforms.ToTensor())
             t.append(
                 transforms.RandomResizedCrop(input_size, scale=(0.2, 1.0), interpolation=interpol_mode),  # 3 is bicubic
@@ -694,7 +705,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
             crop_pct = 1.0
         size = int(input_size / crop_pct)
 
-        t.append(SentinelNormalize(mean, std))
+        t.append(SentinelNormalize_PerImage())
         t.append(transforms.ToTensor())
         t.append(
             transforms.Resize(size, interpolation=interpol_mode),  # to maintain same ratio w.r.t. 224 images

@@ -22,7 +22,9 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'
-
+    i_size = args.input_size
+    p_size = args.patch_size
+    num_patches_per_axis = (i_size // p_size)
     # switch to evaluation mode
     #TODO see if mae even has .eval()
     #model.eval()
@@ -48,10 +50,15 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         # compute output
         with torch.cuda.amp.autocast():
             _, pred, mask = model(images, mask_ratio=args.mask_ratio)
-            print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
-            swirpred = pred.view(16,10,12,12,8,8)
+            #print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
+            #reshape predition to make it comparable to target swir
+            b_size = pred.shape[0]
+            #tokens -> patches
+            swirpred = pred.view(b_size,10,num_patches_per_axis,num_patches_per_axis,p_size,p_size)
             swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
-            swirpred = swirpred.view(16,10,96,96)
+            #patches -> image
+            swirpred = swirpred.view(b_size,10,i_size,i_size)
+            #full image -> only swir channels
             swirpred = swirpred[:,[8,9],:,:]
             loss = criterion(swirpred, swir_targets)
             #print("loss in autocast " , loss)

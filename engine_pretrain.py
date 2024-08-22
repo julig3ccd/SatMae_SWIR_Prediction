@@ -11,6 +11,7 @@ import wandb
 
 import util.misc as misc
 import util.lr_sched as lr_sched
+import os
 from util.print import save_comparison_fig_from_tensor
 
 @torch.no_grad()
@@ -46,16 +47,17 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         # compute output
         with torch.cuda.amp.autocast():
             _, pred, mask = model(images, mask_ratio=args.mask_ratio)
-            pred = pred.view(16,10,12,12,8,8)
-            pred = pred.permute(0, 1, 2, 4, 3, 5).contiguous()
-            pred = pred.view(16,10,96,96)
-            swirpred = pred[:,[8,9],:,:]
+            #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
+            swirpred = pred.view(16,10,12,12,8,8)
+            swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
+            swirpred = swirpred.view(16,10,96,96)
+            swirpred = swirpred[:,[8,9],:,:]
             loss = criterion(swirpred, swir_targets)
             #print("loss in autocast " , loss)
 
         if print_comparison:
               if idx % 100 == 0:
-                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=2)
+                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=2,mask=mask,input=images)
                 print('saved comparison figures for batch ',idx)
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)

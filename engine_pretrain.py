@@ -44,7 +44,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         swir_targets = batch[-1]
         images = images.to(device, non_blocking=True)
         swir_targets = swir_targets.to(device, non_blocking=True)
-        print("INPUT SHAPE IN EVALUATE: ", images.shape)
+        #print("INPUT SHAPE IN EVALUATE: ", images.shape)
 
         # print("before pass model")
         # compute output

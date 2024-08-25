@@ -225,6 +225,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             # Independently mask each channel (i.e. spatial location has subset of channels visible)
             x, mask, ids_restore = self.random_masking(x.view(b, -1, D), mask_ratio)  # (N, 0.25*G*L, D)
             mask = mask.view(b, G, L)
+            
 
         # append cls token
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
@@ -305,6 +306,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         imgs: [N, c, H, W]
         pred: [N, L, c*p*p]
         mask: [N, L], 0 is keep, 1 is remove,
+    
         """
         target = self.patchify(imgs, self.patch_embed[0].patch_size[0], self.in_c)  # (N, L, C*P*P)
 
@@ -319,11 +321,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch
-
+        ##TODO extract loss for SWIR
         total_loss, num_removed = 0., 0.
         for i, group in enumerate(self.channel_groups):
             group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
             total_loss += (group_loss * mask[:, i]).sum()
+            print("Group loss: ", group_loss)
             num_removed += mask[:, i].sum()  # mean loss on removed patches
 
         return total_loss/num_removed
@@ -332,6 +335,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         loss = self.forward_loss(imgs, pred, mask)
+        #TODO use unpatchify here and return images for printing
         return loss, pred, mask
 
 

@@ -328,6 +328,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             total_loss += (group_loss * mask[:, i]).sum()
             print("Group loss: ", group_loss)
             num_removed += mask[:, i].sum()  # mean loss on removed patches
+            print("Num removed: ", num_removed)
+            print ("Total loss: ", total_loss)
 
         return total_loss/num_removed
 
@@ -335,6 +337,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         loss = self.forward_loss(imgs, pred, mask)
+        print("Loss: ", loss)
         #TODO use unpatchify here and return images for printing
         return loss, pred, mask
 

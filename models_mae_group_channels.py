@@ -36,10 +36,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         self.patch_embed = nn.ModuleList([PatchEmbed(img_size, patch_size, len(group), embed_dim)
                                           for group in channel_groups])
         # self.patch_embed = PatchEmbed(img_size, patch_size, 1, embed_dim)
-        num_patches = self.patch_embed[0].num_patches
+        self.num_patches = self.patch_embed[0].num_patches
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim - channel_embed),
+        self.pos_embed = nn.Parameter(torch.zeros(1, self.num_patches + 1, embed_dim - channel_embed),
                                       requires_grad=False)  # fixed sin-cos embedding
         self.channel_embed = nn.Parameter(torch.zeros(1, num_groups, channel_embed), requires_grad=False)
         # self.enc_mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -59,7 +59,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_embed_dim))
 
         self.decoder_pos_embed = nn.Parameter(
-            torch.zeros(1, num_patches + 1, decoder_embed_dim - decoder_channel_embed),
+            torch.zeros(1, self.num_patches + 1, decoder_embed_dim - decoder_channel_embed),
             requires_grad=False)  # fixed sin-cos embedding
         # Extra channel for decoder to represent special place for cls token
         self.decoder_channel_embed = nn.Parameter(torch.zeros(1, num_groups + 1, decoder_channel_embed),
@@ -321,17 +321,23 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch
-        ##TODO extract loss for SWIR
+        ##TODO extract loss for SWIR ?
         total_loss, num_removed = 0., 0.
+
         for i, group in enumerate(self.channel_groups):
             group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
             total_loss += (group_loss * mask[:, i]).sum()
             print("Group loss: ", group_loss)
             num_removed += mask[:, i].sum()  # mean loss on removed patches
             print("Num removed: ", num_removed)
-            print ("Total loss: ", total_loss)
 
-        return total_loss/num_removed
+        #return total_loss/num_removed
+
+        if num_removed == 0:
+            ##TODO check if loss should be divided by all patches or just return total loss
+            return total_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
+        else :
+            return total_loss / num_removed
 
     def forward(self, imgs, mask_ratio=0.75):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)

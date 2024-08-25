@@ -334,7 +334,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                 #total_loss += (group_loss * mask[:, i]).sum()
                 # dont use mask here, as SWIR has been removed on all patches and no patches are masked
                 total_loss += group_loss.sum() 
-                print("Group loss: ", group_loss)
+                #print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
 
             return total_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
@@ -350,7 +350,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         loss = self.forward_loss(imgs, pred, mask)
-        print("Loss: ", loss)
+        #print("Loss: ", loss)
         #TODO use unpatchify here and return images for printing
         return loss, pred, mask
 

@@ -334,7 +334,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                 #total_loss += (group_loss * mask[:, i]).sum()
                 # dont use mask here, as SWIR has been removed on all patches and no patches are masked
                 total_loss += group_loss.sum() 
-                #print("Group loss: ", group_loss)
+                print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
 
             return total_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches

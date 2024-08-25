@@ -369,6 +369,12 @@ class SentinelNormalize_PerImage:
         mean = np.mean(x, axis=(1, 2), keepdims=True)
         std = np.std(x, axis=(1, 2), keepdims=True)
 
+        # Handle channels with zero standard deviation by adding a small epsilon
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        std = np.where(std < epsilon, epsilon, std)
+
+
+
         min_value = mean - 2 * std
         max_value = mean + 2 * std
         img = (x - min_value) / (max_value - min_value) * 255.0
@@ -690,7 +696,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
         t = []
         if is_train:
-            t.append(SentinelNormalize_PerImage())  # use specific Sentinel normalization to avoid NaN
+            t.append(SentinelNormalize_PerImage())  # use specific Sentinel normalization
             t.append(transforms.ToTensor())
             t.append(
                 transforms.RandomResizedCrop(input_size, scale=(0.2, 1.0), interpolation=interpol_mode),  # 3 is bicubic

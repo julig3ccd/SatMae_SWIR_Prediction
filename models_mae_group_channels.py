@@ -324,19 +324,26 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         ##TODO extract loss for SWIR ?
         total_loss, num_removed = 0., 0.
 
-        for i, group in enumerate(self.channel_groups):
-            group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
-            total_loss += (group_loss * mask[:, i]).sum()
-            print("Group loss: ", group_loss)
-            num_removed += mask[:, i].sum()  # mean loss on removed patches
-            print("Num removed: ", num_removed)
-
-        #return total_loss/num_removed
+        #check once if there are any removed patches to decide how loss should be comp (avoid NaN Loss for masking no patches)
+        num_removed += mask[:, 0].sum()
 
         if num_removed == 0:
-            ##TODO check if loss should be divided by all patches or just return total loss
+
+            for i, group in enumerate(self.channel_groups):
+                group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
+                #total_loss += (group_loss * mask[:, i]).sum()
+                # dont use mask here, as SWIR has been removed on all patches and no patches are masked
+                total_loss += group_loss.sum() 
+                print("Group loss: ", group_loss)
+                ##TODO check if loss should be divided by all patches or just return total loss
+
             return total_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
         else :
+            for i, group in enumerate(self.channel_groups):
+                group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
+                total_loss += (group_loss * mask[:, i]).sum()
+                num_removed += mask[:, i].sum()  # mean loss on removed patches
+
             return total_loss / num_removed
 
     def forward(self, imgs, mask_ratio=0.75):

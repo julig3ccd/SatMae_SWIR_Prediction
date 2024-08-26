@@ -343,6 +343,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             #so we can just sum the loss for the SWIR channel
             total_swir_loss = 0.
 
+            print("in case of removed patches== 0")
             for i, group in enumerate(self.channel_groups):
                 # dont use mask here, as SWIR exists on no patch of the input img
                 #print("Group: ", group)
@@ -363,10 +364,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
             return total_swir_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
         else :
+
+            print("in case of removed patches!== 0")
             for i, group in enumerate(self.channel_groups):
                 group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
                 total_loss += (group_loss * mask[:, i]).sum()
                 num_removed += mask[:, i].sum()  # mean loss on removed patches
+                print ("num removed: ", num_removed)
 
             return total_loss / num_removed
 

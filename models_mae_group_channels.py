@@ -361,7 +361,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         
                 #print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
-
+                print("TOTAL SWIR LOSS ", total_swir_loss)
+                print("NUM PATCHES: ", self.num_patches)
             return total_swir_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
         else :
 

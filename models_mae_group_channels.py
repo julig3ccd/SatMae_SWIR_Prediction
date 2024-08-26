@@ -342,9 +342,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
             for i, group in enumerate(self.channel_groups):
                 # dont use mask here, as SWIR exists on no patch of the input img
+                print("Group: ", group)
+                print("i: ", i)
                 if i == 2:
+                    print("Loss: ", loss.shape)
+                    print("group if == 2 ", group)
                     swir_loss = loss[:, group, :].mean(dim=1)
-                    #print("SWIR loss: ", swir_loss)
+                    print("SWIR loss: ", swir_loss)
                     total_swir_loss += swir_loss.sum()
                     # print("Total SWIR loss: ", total_swir_loss)
                     # print ("SWIR loss type: ", type(swir_loss))
@@ -366,6 +370,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         swir_pred = pred[:,[8,9],:,:] #swir channel
+        print("SWIR pred shape: ", swir_pred.shape)
+        print("Targets shape: ", targets.shape)
         swir_loss = self.forward_loss(imgs=imgs, targets=targets, pred=swir_pred, mask=mask)
 
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)

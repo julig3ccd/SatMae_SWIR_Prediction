@@ -308,11 +308,14 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         mask: [N, L], 0 is keep, 1 is remove,
     
         """
+
+        num_channels= self.in_c
         if targets is None:
-            target = self.patchify(imgs, self.patch_embed[0].patch_size[0], self.in_c)  # (N, L, C*P*P)
+            target = self.patchify(imgs, self.patch_embed[0].patch_size[0], num_channels)  # (N, L, C*P*P)
         # specific targets are needed for swir prediction where swir is removed from imgs
         else:
-            target = self.patchify(targets, self.patch_embed[0].patch_size[0], targets.shape[1])  # (N, L, C*P*P)
+            num_channels=target.shape[1]
+            target = self.patchify(targets, self.patch_embed[0].patch_size[0], num_channels)  # (N, L, C*P*P)
 
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
@@ -320,7 +323,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             target = (target - mean) / (var + 1.e-6) ** .5
 
         N, L, _ = target.shape
-        target = target.view(N, L, self.in_c, -1)  # (N, L, C, p^2)
+        target = target.view(N, L, num_channels, -1)  # (N, L, C, p^2)
         target = torch.einsum('nlcp->nclp', target)  # (N, C, L, p^2)
 
         loss = (pred - target) ** 2

@@ -389,7 +389,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         # print("Targets shape: ", targets.shape)
         loss = self.forward_loss(imgs=imgs, targets=targets, pred=pred, mask=mask, swir_only=swir_only)
         
-        print("Loss shape: ", loss.shape)
+        print("Loss shape: ", loss.shape, loss)
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
         #print("Loss: ", loss)
         #return loss, pred, mask

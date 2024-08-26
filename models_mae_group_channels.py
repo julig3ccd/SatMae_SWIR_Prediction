@@ -18,14 +18,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     """
 
 #set patch size=8 to try to match the params of the loaded weigths
-    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,targets=None,
+    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,
                  channel_groups=((0, 1, 2, 6), (3, 4, 5, 7), (8, 9)),
                  channel_embed=256, embed_dim=1024, depth=24, num_heads=16,
                  decoder_channel_embed=128, decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False):
         super().__init__()
 
-        self.targets = targets
         self.in_c = in_chans
         self.patch_size = patch_size
         self.channel_groups = channel_groups
@@ -355,11 +354,11 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
             return total_loss / num_removed
 
-    def forward(self, imgs, mask_ratio=0.75):
+    def forward(self, imgs, targets=None, mask_ratio=0.75):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         swir_pred = pred[:,[8,9],:,:] #swir channel
-        swir_loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=swir_pred, mask=mask)
+        swir_loss = self.forward_loss(imgs=imgs, targets=targets, pred=swir_pred, mask=mask)
 
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
         #print("Loss: ", loss)

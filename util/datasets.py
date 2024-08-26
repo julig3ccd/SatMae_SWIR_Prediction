@@ -630,8 +630,9 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         #TODO check if transformed tensor should be used for target img or not
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
         
+        #only keep swir as target
         targetImage_as_tensor = inputImg_as_tensor[[11,12],:,:]  # (c, h, w)
-    
+
         if self.masked_bands is not None:
             #TODO decide whether to use mean or 0 for masking
             #inputImages[:, :, self.masked_bands] = np.array(self.mean)[self.masked_bands]

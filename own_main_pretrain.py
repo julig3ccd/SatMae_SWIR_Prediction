@@ -270,6 +270,7 @@ def main(args):
             misc.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch)
+            print("saved model at checkpoint epoch: ", epoch)
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      'epoch': epoch, }
@@ -285,7 +286,7 @@ def main(args):
             except ValueError:
                 print(f"Invalid stats?")
 
-    evaluate(model, data_loader_val, print_comparison=True,device=device,args=args)
+    evaluate(data_loader=data_loader_val,model=model, print_comparison=True,device=device,args=args)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))

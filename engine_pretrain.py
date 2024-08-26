@@ -33,7 +33,6 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
     for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
-        #TODO check if channels are cropped
         if idx==0:
             inputswir = images[0,[8,9],:,:]   # first image of batch, only swir channels, all spatial dimensions
             print("THESE ARE THE SWIR CHANNELS IN THE INPUT: ", inputswir)
@@ -54,12 +53,13 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
             #reshape predition to make it comparable to target swir
             b_size = pred.shape[0]
             #tokens -> patches
-            swirpred = pred.view(b_size,10,num_patches_per_axis,num_patches_per_axis,p_size,p_size)
+            swirpred = pred.view(b_size,2,num_patches_per_axis,num_patches_per_axis,p_size,p_size)
             swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
             #patches -> image
             swirpred = swirpred.view(b_size,10,i_size,i_size)
+            #not needed anymore bc of changed model output ->
             #full image -> only swir channels
-            swirpred = swirpred[:,[8,9],:,:]
+            #swirpred = swirpred[:,[8,9],:,:]
             loss = criterion(swirpred, swir_targets)
             #print("loss in autocast " , loss)
 
@@ -101,17 +101,18 @@ def train_one_epoch(model: torch.nn.Module,
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
 
-    for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+    for data_iter_step, (samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
 
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:
             lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
 
         samples = samples.to(device, non_blocking=True)
+        targets = targets.to(device, non_blocking=True)
         #print("SAMPLES / MODEL INPUT SHAPE: ", samples.shape) --> [16, 10, 96, 96]
         #print("FIRST SAMPLE SHAPE : ", samples[0].shape) --> ([10, 96, 96])
         with torch.cuda.amp.autocast():
-            loss, pred, mask = model(samples, mask_ratio=args.mask_ratio)
+            loss, pred, mask = model(samples, targets, mask_ratio=args.mask_ratio)
             #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #print("MASK SHAPE: ", mask.shape) --> ([16, 3, 144])
 

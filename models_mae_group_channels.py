@@ -18,13 +18,14 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     """
 
 #set patch size=8 to try to match the params of the loaded weigths
-    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,
+    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,targets=None,
                  channel_groups=((0, 1, 2, 6), (3, 4, 5, 7), (8, 9)),
                  channel_embed=256, embed_dim=1024, depth=24, num_heads=16,
                  decoder_channel_embed=128, decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False):
         super().__init__()
 
+        self.targets = targets
         self.in_c = in_chans
         self.patch_size = patch_size
         self.channel_groups = channel_groups
@@ -301,14 +302,18 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         x = torch.cat(x_c_patch, dim=1)  # (N, c, L, p**2)
         return x
 
-    def forward_loss(self, imgs, pred, mask):
+    def forward_loss(self, imgs, targets, pred, mask):
         """
         imgs: [N, c, H, W]
         pred: [N, L, c*p*p]
         mask: [N, L], 0 is keep, 1 is remove,
     
         """
-        target = self.patchify(imgs, self.patch_embed[0].patch_size[0], self.in_c)  # (N, L, C*P*P)
+        if targets is None:
+            target = self.patchify(imgs, self.patch_embed[0].patch_size[0], self.in_c)  # (N, L, C*P*P)
+        # specific targets are needed for swir prediction where swir is removed from imgs
+        else:
+            target = self.patchify(targets, self.patch_embed[0].patch_size[0], self.in_c)    
 
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
@@ -321,23 +326,27 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch
-        ##TODO extract loss for SWIR ?
+    
         total_loss, num_removed = 0., 0.
+        
 
         #check once if there are any removed patches to decide how loss should be comp (avoid NaN Loss for masking no patches)
         num_removed += mask[:, 0].sum()
 
         if num_removed == 0:
+            #in this case we have removed 0 patches, which indicates that we want to predict swir based on all other channels
+            #so we can just sum the loss for the SWIR channel
+            total_swir_loss = 0.
 
             for i, group in enumerate(self.channel_groups):
-                group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
-                #total_loss += (group_loss * mask[:, i]).sum()
-                # dont use mask here, as SWIR has been removed on all patches and no patches are masked
-                total_loss += group_loss.sum() 
+                # dont use mask here, as SWIR exists on no patch of the input img
+                if group == 2:
+                    swir_loss = loss[:, group, :].mean(dim=1)
+                    total_swir_loss += swir_loss.sum() 
                 #print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
 
-            return total_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
+            return total_swir_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
         else :
             for i, group in enumerate(self.channel_groups):
                 group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
@@ -349,11 +358,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     def forward(self, imgs, mask_ratio=0.75):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
-        loss = self.forward_loss(imgs, pred, mask)
-        #print("Loss: ", loss)
-        #TODO use unpatchify here and return images for printing
-        return loss, pred, mask
+        swir_pred = pred[:,[8,9],:,:] #swir channel
+        swir_loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=swir_pred, mask=mask)
 
+        #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
+        #print("Loss: ", loss)
+        #return loss, pred, mask
+        return swir_loss, swir_pred, mask
 
 def mae_vit_base_patch16_dec512d8b(**kwargs):
     model = MaskedAutoencoderGroupChannelViT(

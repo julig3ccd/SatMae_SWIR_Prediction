@@ -314,7 +314,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             target = self.patchify(imgs, self.patch_embed[0].patch_size[0], num_channels)  # (N, L, C*P*P)
         # specific targets are needed for swir prediction where swir is removed from imgs
         else:
-            num_channels=target.shape[1]
+            num_channels=targets.shape[1]
             target = self.patchify(targets, self.patch_embed[0].patch_size[0], num_channels)  # (N, L, C*P*P)
 
         if self.norm_pix_loss:

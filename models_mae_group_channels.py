@@ -352,7 +352,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                     #swir_loss = loss[:, group, :].mean(dim=1)
                     #print("SWIR loss: ", swir_loss)
                     # in this case no need to slice out group bc we only have 2 channels in loss
+                    print("Loss shape", loss.shape, "Loss", loss)
+
                     total_swir_loss += loss.sum()
+                    print("Total SWIR loss shape: ", total_swir_loss.shape, "Total SWIR loss: ", total_swir_loss)
                     # print("Total SWIR loss: ", total_swir_loss)
                     # print ("SWIR loss type: ", type(swir_loss))
                     # print ("Total SWIR loss type: ", type(total_swir_loss)) 
@@ -369,18 +372,21 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
             return total_loss / num_removed
 
+    #targets are not None if loss on swir should be computed for fully masked input swir
     def forward(self, imgs, targets=None, mask_ratio=0.75):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
-        swir_pred = pred[:,[8,9],:,:] #swir channel
+        
+        if targets is not None:
+            pred = pred[:,[8,9],:,:] #swir channel
         # print("SWIR pred shape: ", swir_pred.shape)
         # print("Targets shape: ", targets.shape)
-        swir_loss = self.forward_loss(imgs=imgs, targets=targets, pred=swir_pred, mask=mask)
+        loss = self.forward_loss(imgs=imgs, targets=targets, pred=pred, mask=mask)
 
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
         #print("Loss: ", loss)
         #return loss, pred, mask
-        return swir_loss, swir_pred, mask
+        return loss, pred, mask
 
 def mae_vit_base_patch16_dec512d8b(**kwargs):
     model = MaskedAutoencoderGroupChannelViT(

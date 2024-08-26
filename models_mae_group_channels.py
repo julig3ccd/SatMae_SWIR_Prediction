@@ -353,7 +353,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                     #print("group if == 2 ", group)
                     print("Loss shape before swir slcicing: ", loss.shape, "All Loss channel dim ", loss[0, :, 0])
                     group_loss = loss.mean(dim=1)
-                    print ("Loss after channel slicing: ", group_loss.shape,"Frist elem in gr loss", group_loss[0,:,:])
+                    print ("Loss after channel slicing: ", group_loss.shape)
                     #print("SWIR loss: ", swir_loss)
                     # in this case no need to slice out group bc we only have 2 channels in loss
                     #print("Loss shape", loss.shape, "Loss", loss)

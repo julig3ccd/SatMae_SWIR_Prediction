@@ -62,6 +62,9 @@ def get_args_parser():
     parser.set_defaults(norm_pix_loss=False)
 
     parser.add_argument('--print_comparison', action='store_true', default=False)
+    
+    parser.add_argument('--swir_only', action='store_true', default=False)
+
 
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,

@@ -29,7 +29,6 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
     #TODO see if mae even has .eval()
     #model.eval()
 
-
     for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
 #####2. provide images with cropped swir channels as input        
         images = batch[0]
@@ -48,7 +47,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         # print("before pass model")
         # compute output
         with torch.cuda.amp.autocast():
-            _, pred, mask = model(images, mask_ratio=args.mask_ratio)
+            _, pred, mask = model(images, swir_only=args.swir_only, mask_ratio=args.mask_ratio)
             #print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #reshape predition to make it comparable to target swir
             b_size = pred.shape[0]
@@ -112,7 +111,7 @@ def train_one_epoch(model: torch.nn.Module,
         #print("SAMPLES / MODEL INPUT SHAPE: ", samples.shape) --> [16, 10, 96, 96]
         #print("FIRST SAMPLE SHAPE : ", samples[0].shape) --> ([10, 96, 96])
         with torch.cuda.amp.autocast():
-            loss, pred, mask = model(samples, targets=targets, mask_ratio=args.mask_ratio)
+            loss, pred, mask = model(samples, swir_only=args.swir_only, targets=targets, mask_ratio=args.mask_ratio)
             #print("PRED SHAPE: ", pred.shape) --> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #print("MASK SHAPE: ", mask.shape) --> ([16, 3, 144])
 

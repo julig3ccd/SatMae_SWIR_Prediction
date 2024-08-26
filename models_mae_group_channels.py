@@ -301,12 +301,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         x = torch.cat(x_c_patch, dim=1)  # (N, c, L, p**2)
         return x
 
-    def forward_loss(self, imgs, targets, pred, mask):
+    def forward_loss(self, imgs, targets, pred, mask, swir_only=False):
         """
         imgs: [N, c, H, W]
         pred: [N, L, c*p*p]
         mask: [N, L], 0 is keep, 1 is remove,
-    
+        swir_only: bool, if True, only compute loss on SWIR channel
         """
 
         num_channels= self.in_c
@@ -325,9 +325,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         N, L, _ = target.shape
         target = target.view(N, L, num_channels, -1)  # (N, L, C, p^2)
         target = torch.einsum('nlcp->nclp', target)  # (N, C, L, p^2)
+        
+        print("Pred shape in forward loss: ", pred.shape)
+        print("Target shape in forward loss: ", target.shape)
 
-        #print("Pred shape in forward loss: ", pred.shape)
-        #print("Target shape in forward loss: ", target.shape)
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch
     
@@ -337,7 +338,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         #check once if there are any removed patches to decide how loss should be comp (avoid NaN Loss for masking no patches)
         num_removed += mask[:, 0].sum()
 
-        if num_removed == 0:
+        if num_removed == 0 and swir_only==True:
             #in this case we have removed 0 patches, which indicates that we want to predict swir based on all other channels
             #so we can just sum the loss for the SWIR channel
             total_swir_loss = 0.
@@ -347,19 +348,16 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                 #print("Group: ", group)
                 #print("i: ", i)
                 if i == 2:
-                    #print("Loss: ", loss.shape)
+                    #print("Loss: ", loss.shape) --> ([1, 10, 144])
                     #print("group if == 2 ", group)
-                    #swir_loss = loss[:, group, :].mean(dim=1)
+                    group_loss = loss[:, [0,1], :].mean(dim=1)
                     #print("SWIR loss: ", swir_loss)
                     # in this case no need to slice out group bc we only have 2 channels in loss
-                    print("Loss shape", loss.shape, "Loss", loss)
+                    #print("Loss shape", loss.shape, "Loss", loss)
 
                     total_swir_loss += loss.sum()
-                    print("Total SWIR loss shape: ", total_swir_loss.shape, "Total SWIR loss: ", total_swir_loss)
-                    # print("Total SWIR loss: ", total_swir_loss)
-                    # print ("SWIR loss type: ", type(swir_loss))
-                    # print ("Total SWIR loss type: ", type(total_swir_loss)) 
-                    # print ("num patches type "  , type(self.num_patches))
+                    #print("Total SWIR loss shape: ", total_swir_loss.shape, "Total SWIR loss: ", total_swir_loss) #--> Total SWIR loss shape:  torch.Size([]) Total SWIR loss:  tensor(876.5109, device='cuda:0') 
+        
                 #print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
 
@@ -373,15 +371,19 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             return total_loss / num_removed
 
     #targets are not None if loss on swir should be computed for fully masked input swir
-    def forward(self, imgs, targets=None, mask_ratio=0.75):
+    def forward(self, imgs, swir_only=False, targets=None, mask_ratio=0.75):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         
-        if targets is not None:
+        if swir_only==True and targets is not None:
             pred = pred[:,[8,9],:,:] #swir channel
+        elif swir_only==True and targets is None:
+            print("MISSING TARGET IMAGES EVEN THOUGH SWIR PREDICTION ONLY == TRUE --> needed in this case bc swir is removed from input imgs")
+        elif swir_only==False and targets is not None:
+            print("WARNING: provided targets but swir_only is False --> might be unintentional")
         # print("SWIR pred shape: ", swir_pred.shape)
         # print("Targets shape: ", targets.shape)
-        loss = self.forward_loss(imgs=imgs, targets=targets, pred=pred, mask=mask)
+        loss = self.forward_loss(imgs=imgs, targets=targets, pred=pred, mask=mask, swir_only=swir_only)
 
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
         #print("Loss: ", loss)

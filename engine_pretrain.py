@@ -50,18 +50,29 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
             _, pred, mask = model(images, swir_only=args.swir_only, mask_ratio=args.mask_ratio)
             #print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #reshape predition to make it comparable to target swir
-            b_size = pred.shape[0]
-            #tokens -> patches
-            swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
-            swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
-            #patches -> image
-            swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size)
-            #not needed anymore bc of changed model output ->
-            #full image -> only swir channels
-            swirpred = swirpred[:,[8,9],:,:]
-            loss = criterion(swirpred, swir_targets)
-            #print("loss in autocast " , loss)
+            if args.swir_only:
+                b_size = pred.shape[0]
+                #tokens -> patches
+                swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
+                swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
+                #patches -> image
+                swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size)
+                #not needed anymore bc of changed model output ->
+                #full image -> only swir channels
+                loss = criterion(swirpred, swir_targets)
+                #print("loss in autocast " , loss)
+            else: 
+                b_size = pred.shape[0]
+                #tokens -> patches
+                swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
+                swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
+                #patches -> image
+                swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size)
+                swir_only_pred = swirpred[:,[8,9],:,:]
+                loss = criterion(swir_only_pred, swir_targets)
+                #print("loss in autocast " , loss)    
 
+        
         if print_comparison:
               if idx % 100 == 0:
                 save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=2,mask=mask,input=images)

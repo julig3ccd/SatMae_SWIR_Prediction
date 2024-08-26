@@ -344,12 +344,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
                 # dont use mask here, as SWIR exists on no patch of the input img
                 if i == 2:
                     swir_loss = loss[:, group, :].mean(dim=1)
-                    print("SWIR loss: ", swir_loss)
+                    #print("SWIR loss: ", swir_loss)
                     total_swir_loss += swir_loss.sum()
-                    print("Total SWIR loss: ", total_swir_loss)
-                    print ("SWIR loss type: ", type(swir_loss))
-                    print ("Total SWIR loss type: ", type(total_swir_loss)) 
-                    print ("num patches type "  , type(self.num_patches))
+                    # print("Total SWIR loss: ", total_swir_loss)
+                    # print ("SWIR loss type: ", type(swir_loss))
+                    # print ("Total SWIR loss type: ", type(total_swir_loss)) 
+                    # print ("num patches type "  , type(self.num_patches))
                 #print("Group loss: ", group_loss)
                 ##TODO check if loss should be divided by all patches or just return total loss
 

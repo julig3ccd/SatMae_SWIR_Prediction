@@ -373,8 +373,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         swir_pred = pred[:,[8,9],:,:] #swir channel
-        print("SWIR pred shape: ", swir_pred.shape)
-        print("Targets shape: ", targets.shape)
+        # print("SWIR pred shape: ", swir_pred.shape)
+        # print("Targets shape: ", targets.shape)
         swir_loss = self.forward_loss(imgs=imgs, targets=targets, pred=swir_pred, mask=mask)
 
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)

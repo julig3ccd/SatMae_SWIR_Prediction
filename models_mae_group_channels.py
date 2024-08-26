@@ -326,8 +326,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         target = target.view(N, L, num_channels, -1)  # (N, L, C, p^2)
         target = torch.einsum('nlcp->nclp', target)  # (N, C, L, p^2)
 
-        print("Pred shape in forward loss: ", pred.shape)
-        print("Target shape in forward loss: ", target.shape)
+        #print("Pred shape in forward loss: ", pred.shape)
+        #print("Target shape in forward loss: ", target.shape)
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch
     
@@ -344,11 +344,11 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
             for i, group in enumerate(self.channel_groups):
                 # dont use mask here, as SWIR exists on no patch of the input img
-                print("Group: ", group)
-                print("i: ", i)
+                #print("Group: ", group)
+                #print("i: ", i)
                 if i == 2:
-                    print("Loss: ", loss.shape)
-                    print("group if == 2 ", group)
+                    #print("Loss: ", loss.shape)
+                    #print("group if == 2 ", group)
                     #swir_loss = loss[:, group, :].mean(dim=1)
                     #print("SWIR loss: ", swir_loss)
                     # in this case no need to slice out group bc we only have 2 channels in loss

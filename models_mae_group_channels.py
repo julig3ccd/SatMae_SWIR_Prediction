@@ -312,7 +312,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             target = self.patchify(imgs, self.patch_embed[0].patch_size[0], self.in_c)  # (N, L, C*P*P)
         # specific targets are needed for swir prediction where swir is removed from imgs
         else:
-            target = self.patchify(targets, self.patch_embed[0].patch_size[0], self.in_c)    
+            target = self.patchify(targets, self.patch_embed[0].patch_size[0], targets.shape[1])  # (N, L, C*P*P)
 
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)

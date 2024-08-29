@@ -329,10 +329,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         print("Pred shape in forward loss: ", pred.shape) # -->  (16,2,144,64)
         print("Target shape in forward loss: ", target.shape)
         
-        print ("Target SWIR 1: ", target[:,[0],:,:])
-        print ("Target SWIR 2: ", target[:,[1],:,:])
-        print("pred swir 1", pred[:,[0],:,:])
-        print("pred swir 2", pred[:,[1],:,:])
+        print ("b0 Target SWIR 1: ", target[0,[0],:,:])
+        print ("b0 Target SWIR 2: ", target[0,[1],:,:])
+        print("b0 pred swir 1", pred[0,[0],:,:])
+        print("b0 pred swir 2", pred[0,[1],:,:])
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch (per pixel loss -> per patch loss)

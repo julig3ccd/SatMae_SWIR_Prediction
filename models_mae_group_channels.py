@@ -329,10 +329,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         print("Pred shape in forward loss: ", pred.shape) # -->  (16,2,144,64)
         print("Target shape in forward loss: ", target.shape)
         
-        print ("b0 Target SWIR 1: ", target[0,[0],:,:])
-        print ("b0 Target SWIR 2: ", target[0,[1],:,:])
-        print("b0 pred swir 1", pred[0,[0],:,:])
-        print("b0 pred swir 2", pred[0,[1],:,:])
+        # print ("b0 Target SWIR 1: ", target[0,[0],:,:])
+        # print ("b0 Target SWIR 2: ", target[0,[1],:,:])
+        # print("b0 pred swir 1", pred[0,[0],:,:])
+        # print("b0 pred swir 2", pred[0,[1],:,:])
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch (per pixel loss -> per patch loss)
@@ -349,25 +349,25 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             #so we can just sum the loss for the SWIR Group
             total_swir_loss = 0.
             assert loss.shape[1] == 2, "for swir only prediction, pred, target and loss should have 2 channels"
-            print("in case of removed patches== 0 & swir only")
+            #print("in case of removed patches== 0 & swir only")
         
             # dont use mask here, as SWIR exists on no patch of the input img
             
                 
             #print("Loss: ", loss.shape) --> ([1, 10, 144])
                     
-            print("Loss shape before swir slcicing: ", loss.shape, "All Loss channel dim ", loss[0, :, 0])
+            #print("Loss shape before swir slcicing: ", loss.shape, "All Loss channel dim ", loss[0, :, 0])
             #maybe sum instead of mean of channel dim reduction ?
-            group_loss = loss.mean(dim=1) # (N, C, L) --> (N, L) from two channels to one
+            group_loss = loss.mean(dim=1) # (N, C, L) --> (N, L) from two channels to one ->  torch.Size([16, 2, 144])
                     
-            print ("Loss after channel slicing: ", group_loss.shape)
+            #print ("Loss after channel slicing: ", group_loss.shape) --> torch.Size([16, 144])
                     
             # in this case no need to slice out group bc we only have 2 channels in loss
             total_swir_loss += loss.sum()
         
-            #print("Group loss: ", group_loss)
-            print("TOTAL SWIR LOSS ", total_swir_loss)
-            print("NUM PATCHES: ", self.num_patches)
+            #print("Group loss: ", group_loss) --> 
+            #print("TOTAL SWIR LOSS ", total_swir_loss) --> example: TOTAL SWIR LOSS  tensor(710.4545, device='cuda:0', grad_fn=<AddBackward0>)
+            #print("NUM PATCHES: ", self.num_patches) --> 144
 
             return total_swir_loss / self.num_patches  # devide by all patches bc SWIR has been removed on all patches
         else :

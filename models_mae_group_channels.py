@@ -326,8 +326,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         target = target.view(N, L, num_channels, -1)  # (N, L, C, p^2)
         target = torch.einsum('nlcp->nclp', target)  # (N, C, L, p^2)
         
-        print("Pred shape in forward loss: ", pred.shape) # -->  (16,2,144,64)
-        print("Target shape in forward loss: ", target.shape)
+        # print("Pred shape in forward loss: ", pred.shape) # -->  (16,2,144,64)
+        # print("Target shape in forward loss: ", target.shape)
         
         # print ("b0 Target SWIR 1: ", target[0,[0],:,:])
         # print ("b0 Target SWIR 2: ", target[0,[1],:,:])
@@ -396,7 +396,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         # print("Targets shape: ", targets.shape)
         loss = self.forward_loss(imgs=imgs, targets=targets, pred=pred, mask=mask, swir_only=swir_only)
         
-        print("Loss shape: ", loss.shape, loss)
+        #print("Loss shape: ", loss.shape, loss)
         #loss = self.forward_loss(imgs=imgs, targets=self.targets, pred=pred, mask=mask)
         #print("Loss: ", loss)
         #return loss, pred, mask

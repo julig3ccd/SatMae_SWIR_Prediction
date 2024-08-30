@@ -47,7 +47,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
         # print("before pass model")
         # compute output
         with torch.cuda.amp.autocast():
-            _, pred, mask = model(images, swir_only=args.swir_only, mask_ratio=args.mask_ratio)
+            _, pred, mask = model(images, swir_only=args.swir_only,targets=swir_targets, mask_ratio=args.mask_ratio)
             #print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
             #reshape predition to make it comparable to target swir
             if args.swir_only:

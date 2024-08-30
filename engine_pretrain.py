@@ -56,7 +56,7 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
                 swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
                 swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
                 #patches -> image
-                swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size)
+                swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size) #(Batch , Channels(2) ,Height,Width)
                 #not needed anymore bc of changed model output ->
                 #full image -> only swir channels
                 loss = criterion(swirpred, swir_targets)

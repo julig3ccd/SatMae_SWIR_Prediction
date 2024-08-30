@@ -242,7 +242,8 @@ def main(args):
         wandb.watch(model)
 
     if args.eval:
-        evaluate(data_loader=data_loader_val, model=model, print_comparison=True,device=device,args=args)    
+        test_stats=evaluate(data_loader=data_loader_val, model=model, print_comparison=True,device=device,args=args)    
+        print("TEST STATS: ",test_stats)
         print("exit because eval mode only is set")
         exit(0)
 
@@ -289,8 +290,9 @@ def main(args):
             except ValueError:
                 print(f"Invalid stats?")
 
-    evaluate(data_loader=data_loader_val,model=model, print_comparison=True,device=device,args=args)
+    test_stats= evaluate(data_loader=data_loader_val,model=model, print_comparison=True,device=device,args=args)
 
+    print("TEST STATS: ",test_stats)
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

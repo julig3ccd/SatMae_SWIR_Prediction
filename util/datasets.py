@@ -626,15 +626,12 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         #targetImages = inputImages[:, :,[11,12]] 
         #mask out bands of input image 
 
-
-        #TODO check if transformed tensor should be used for target img or not
         inputImg_as_tensor = self.transform(inputImages)  # (c, h, w)
         
         #only keep swir as target
         targetImage_as_tensor = inputImg_as_tensor[[11,12],:,:]  # (c, h, w)
 
         if self.masked_bands is not None:
-            #TODO decide whether to use mean or 0 for masking
             #inputImages[:, :, self.masked_bands] = np.array(self.mean)[self.masked_bands]
             inputImg_as_tensor[self.masked_bands, :, :] = 0
 
@@ -711,6 +708,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         else:
             crop_pct = 1.0
         size = int(input_size / crop_pct)
+
+        print("IMAGES WILL BE RESIZED TO: ", size)
 
         t.append(SentinelNormalize_PerImage())
         t.append(transforms.ToTensor())

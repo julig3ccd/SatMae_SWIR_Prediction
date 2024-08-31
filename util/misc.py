@@ -344,7 +344,7 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
             for key in ['head.weight', 'head.bias']:
                 if key in checkpoint['model']:
                     del checkpoint['model'][key]
-            if args.eval == True and args.img_size != 96:   
+            if args.eval == True and args.input_size != 96:   
                 print("Removing keys that cause error for img sizes other than 96") 
                 checkpoint=remove_mismatching_keys_for_new_img_size(checkpoint=checkpoint)
     

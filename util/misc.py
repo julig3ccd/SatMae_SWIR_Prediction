@@ -314,6 +314,25 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
         model.save_checkpoint(save_dir=args.output_dir, tag="checkpoint-%s" % epoch_name, client_state=client_state)
 
 
+def remove_mismatching_keys_for_new_img_size(checkpoint):
+    for key in ['head.weight',
+                 'head.bias',
+                 'pos_embed',
+                 'decoder_pos_embed',
+                 'patch_embed.0.proj.weight',
+                 'patch_embed.1.proj.weight',
+                 'patch_embed.2.proj.weight',
+                 'decoder_pred.0.weight',
+                 'decoder_pred.0.bias',
+                 'decoder_pred.1.weight',
+                 'decoder_pred.1.bias',
+                 'decoder_pred.2.weight',
+                 'decoder_pred.2.bias',
+                 ]:
+                    if key in checkpoint['model']:
+                        del checkpoint['model'][key] 
+    return checkpoint                    
+
 def load_model(args, model_without_ddp, optimizer, loss_scaler):
     if args.resume:
         if args.resume.startswith('https'):
@@ -325,6 +344,9 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
             for key in ['head.weight', 'head.bias']:
                 if key in checkpoint['model']:
                     del checkpoint['model'][key]
+            if args.eval == True and args.img_size != 96:   
+                print("Removing keys that cause error for img sizes other than 96") 
+                checkpoint=remove_mismatching_keys_for_new_img_size(checkpoint=checkpoint)
     
         model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
         print("Resume checkpoint %s" % args.resume)

@@ -24,7 +24,8 @@ def create_swir_img_from_tensor(image, num_channels):
 
 def get_binary_swir_mask_from_tensor(mask):  # mask shape: [3,144] - [Channel Groups, 12*12 patches] - [:,i] --> has 0 (keep) or 1 (masked)
     mask =mask.cpu().numpy()
-    swir_mask = mask[2,:].reshape(12,12)
+    num_patches_per_axis = mask.shape[1] ** 0.5
+    swir_mask = mask[2,:].reshape(num_patches_per_axis,num_patches_per_axis)
     #print("SWIR MASK: ", swir_mask) 
     
     return swir_mask
@@ -32,10 +33,12 @@ def get_binary_swir_mask_from_tensor(mask):  # mask shape: [3,144] - [Channel Gr
 def get_masked_input_img_from_tensor(input,mask):
 
     swir_input_full=create_swir_img_from_tensor(input,num_channels=10) #shape [96,96,3]
+    input_size = swir_input_full.shape[0]   
     binary_mask = get_binary_swir_mask_from_tensor(mask)               #shape [12,12]
     
+
     # resize the binary mask to [96, 96] (nearest-neighbor interpolation)
-    resized_mask = resize(binary_mask, (96, 96), order=0, preserve_range=True)
+    resized_mask = resize(binary_mask, (input_size, input_size), order=0, preserve_range=True)
 
     # Apply the resized mask to the image
     # Remember, zeros are 'keep', so no need to invert the mask

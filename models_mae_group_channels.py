@@ -18,7 +18,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     """
 
 #set patch size=8 to try to match the params of the loaded weigths
-    def __init__(self, img_size=224, patch_size=8, in_chans=3, spatial_mask=False,
+    def __init__(self, img_size=224, patch_size=16, in_chans=3, spatial_mask=False,
                  channel_groups=((0, 1, 2, 6), (3, 4, 5, 7), (8, 9)),
                  channel_embed=256, embed_dim=1024, depth=24, num_heads=16,
                  decoder_channel_embed=128, decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
@@ -334,7 +334,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         # print("b0 pred swir 1", pred[0,[0],:,:])
         # print("b0 pred swir 2", pred[0,[1],:,:])
 
-        loss = (pred - target) ** 2
+        loss = (pred - target) ** 2 #substraction pixel wise ? 
         loss = loss.mean(dim=-1)  # [N, C, L], mean loss per patch (per pixel loss -> per patch loss)
     
 

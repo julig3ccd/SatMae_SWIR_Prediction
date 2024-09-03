@@ -12,7 +12,7 @@ M2_channels = np.zeros(13, dtype=np.float64)
 num_pixels = 0
 
 dir_list = os.listdir(dataset_dir)
-dir_list = dir_list[:100]
+
 # Iterate over all images in the dataset
 for image_name in tqdm(dir_list):
     image_path = os.path.join(dataset_dir, image_name)
@@ -23,9 +23,6 @@ for image_name in tqdm(dir_list):
         image = src.read()
         
         # Ensure the image has the expected 13 channels
-        if image.shape[0] != 13:
-            print(f"Warning: {image_name} does not have 13 channels. Skipping...")
-            continue
         
         # Reshape to (bands, rows * cols) to facilitate processing
         image = image.reshape(13, -1)

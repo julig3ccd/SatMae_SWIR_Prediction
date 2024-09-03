@@ -4,7 +4,7 @@ import rasterio
 from tqdm import tqdm
 
 # Directory where the images are stored
-dataset_dir = "../../../data/train"
+dataset_dir = "/home/stud/geissinger/data/train"
 
 # Initialize variables to store the sum and sum of squares for each channel
 sum_channels = np.zeros(13, dtype=np.float64)

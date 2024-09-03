@@ -26,9 +26,7 @@ def get_binary_swir_mask_from_tensor(mask):  # mask shape: [3,144] - [Channel Gr
     mask =mask.cpu().numpy()
     num_patches_per_axis = int(mask.shape[1] ** 0.5)
     print("patches per axis: ", num_patches_per_axis)   
-    swir_mask = mask[2,:].reshape(num_patches_per_axis,num_patches_per_axis)
-    #print("SWIR MASK: ", swir_mask) 
-    
+    swir_mask = mask[2,:].reshape(num_patches_per_axis,num_patches_per_axis)    
     return swir_mask
 
 def get_masked_input_img_from_tensor(input,mask):

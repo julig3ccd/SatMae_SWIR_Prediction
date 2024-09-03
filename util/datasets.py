@@ -572,7 +572,6 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
         # create path strings for all tiff files in directory
         fileData = []
-        #TODO devide dataset into train and val
         img_id = 0
         directory_list = os.listdir(directory_path)
 
@@ -650,6 +649,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
             'image_ids': selection['image_id'],
             #'timestamps': selection['timestamp']
         }
+       
+
         return inputImg_as_tensor, targetImage_as_tensor
     
     def get_raster_meta(self,img_path):
@@ -658,39 +659,36 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
     
     
-    def get_channel_means(self):
+    def compute_channel_means(self):
+        
         img_list= [self.open_image(img_path) for img_path in self.df['image_path']]
         print("IMAGE LIST LEN: ",len(img_list))
         print("DF LEN: ",len(self.df))
-        img_list_means=torch.zeros(1,13)
+        channel_mean_df= pd.DataFrame(columns=['channel0','channel1','channel2','channel3','channel4','channel5','channel6','channel7','channel8','channel9','channel10','channel11','channel12'])
         for i, img in enumerate(img_list):
             print("IMG SHAPE: ",img.shape)
-            img_means = torch.zeros(1,13)
-            print("img means tensor ",img_means)
-            imgTensor = torch.from_numpy(img)
-
-            for j, channel in enumerate(range(imgTensor.shape[2])):
-                print("CHANNEL SHAPE: ",imgTensor[:,:,channel].shape)
-                channel = imgTensor[:,:,channel]
-                flatTensor = channel.flatten(0)
-                print("FLAT TENSOR SHAPE",flatTensor.shape)   
-                local_channel_mean = torch.mean(flatTensor)
-                print("LOCAL CHANNEL MEAN: ",local_channel_mean)
-                img_means[:,j] = local_channel_mean
-            print("img means: ",img_means)
-            img_list_means = torch.stack((img_list_means,img_means),0)
-
-        print("IMG LIST MEANS", img_list_means.shape)
-        means=torch.mean(img_list_means,0)
-        print("MEANS SHAPE: ",means.shape, "MEANS: ",means)
-        return means
-
+            
+            for j, channel in enumerate(range(img.shape[2])):
+                flat_channel = img[:,:,channel].flatten()
+                local_channel_mean = np.mean(flat_channel)
+                channel_mean_df[f'channel{j}'] = local_channel_mean
+            
+        return channel_mean_df.expand.mean()       
            
 
     @staticmethod
-    def build_transform(is_train, input_size, mean=None, std=None):
+    def build_transform(is_train, input_size, mean=None, std=None, normalize_sentinel=None):
         # train transform
         interpol_mode = transforms.InterpolationMode.BICUBIC
+
+        if normalize_sentinel is None:
+            normalize_sentinel = SentinelNormalize_PerImage()
+        elif normalize_sentinel == 'dataset' and mean is None and std is None:
+            normalize_sentinel = SentinelNormalize(mean, std)
+        else:
+            raise ValueError(f'Invalid combination for normalization: norm_method: {normalize_sentinel}, mean:{mean}, std:{std}')    
+        
+        print("INPUT SIZE IN TRANSFORM: ",input_size)
 
         t = []
         if is_train:
@@ -709,7 +707,8 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
             crop_pct = 1.0
         size = int(input_size / crop_pct)
 
-        print("IMAGES WILL BE RESIZED TO: ", size)
+        print("VAL IMAGES WILL BE RESIZED TO: ", size)
+        print("AND CROPPED TO: ", input_size)
 
         t.append(SentinelNormalize_PerImage())
         t.append(transforms.ToTensor())
@@ -792,7 +791,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     :return: SatelliteDataset object.
     """
     csv_path = os.path.join(args.train_path if is_train else args.val_path)
-    #TODO see if this works 
+    
     directory_path = os.path.join(args.train_path if is_train else args.val_path)
 
     if args.dataset_type == 'rgb':
@@ -822,8 +821,12 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
         dataset = NAIP_train_dataset if is_train else NAIP_test_dataset
         args.nb_classes = NAIP_CLASS_NUM
     elif args.dataset_type == 'sentinel_own_data': 
-        #mean, std = SentinelIndividualImageDataset_OwnData.mean, SentinelIndividualImageDataset_OwnData.std
-        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size)
+        
+        if args.normalize_sentinel == 'dataset':
+            mean = SentinelIndividualImageDataset_OwnData.mean
+            std = SentinelIndividualImageDataset_OwnData.std
+
+        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, normalize_sentinel='dataset')
         dataset = SentinelIndividualImageDataset_OwnData(directory_path, transform, masked_bands=args.masked_bands,
                                                  dropped_bands=args.dropped_bands, is_train=is_train)
 

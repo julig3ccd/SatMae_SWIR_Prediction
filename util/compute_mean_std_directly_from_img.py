@@ -4,7 +4,7 @@ import rasterio
 from tqdm import tqdm
 
 # Directory where the images are stored
-dataset_dir = "/home/stud/geissinger/data/validate"
+dataset_dir = "/home/stud/geissinger/data/train"
 
 # Initialize variables to store mean and M2 (sum of squares of differences from the mean)
 mean_channels = np.zeros(13, dtype=np.float64)

@@ -161,7 +161,11 @@ cython_debug/
 
 out/
 output_dir/
-.ipynb
-.tif
 .sat_venv/
 Testdata/
+Testdata/airport_0_1.tif
+Testdata/airport_0_1.tif.aux.xml
+*.ipynb
+*.tif
+*.xml
+

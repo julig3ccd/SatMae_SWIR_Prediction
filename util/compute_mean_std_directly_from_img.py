@@ -6,9 +6,9 @@ from tqdm import tqdm
 # Directory where the images are stored
 dataset_dir = "/home/stud/geissinger/data/validate"
 
-# Initialize variables to store the sum and sum of squares for each channel
-sum_channels = np.zeros(13, dtype=np.float64)
-sum_squares_channels = np.zeros(13, dtype=np.float64)
+# Initialize variables to store mean and M2 (sum of squares of differences from the mean)
+mean_channels = np.zeros(13, dtype=np.float64)
+M2_channels = np.zeros(13, dtype=np.float64)
 num_pixels = 0
 
 # Iterate over all images in the dataset
@@ -25,23 +25,22 @@ for image_name in tqdm(os.listdir(dataset_dir)):
             print(f"Warning: {image_name} does not have 13 channels. Skipping...")
             continue
         
-        # Reshape to (rows * cols, bands) to make summing easier
+        # Reshape to (bands, rows * cols) to facilitate processing
         image = image.reshape(13, -1)
         
-        # Accumulate the sum and sum of squares
-        sum_channels += image.sum(axis=1)
-        sum_squares_channels += (image ** 2).sum(axis=1)
-        
-        # Update the total number of pixels processed
-        num_pixels += image.shape[1]
+        # Incrementally calculate mean and variance using Welford's method
+        for i in range(image.shape[1]):  # Iterate over pixels
+            num_pixels += 1
+            delta = image[:, i] - mean_channels
+            mean_channels += delta / num_pixels
+            delta2 = image[:, i] - mean_channels
+            M2_channels += delta * delta2
 
-# Compute the mean for each channel
-mean_channels = sum_channels / num_pixels
+# Calculate variance and standard deviation
+variance_channels = M2_channels / num_pixels
+std_channels = np.sqrt(variance_channels)
 
-# Compute the standard deviation for each channel
-var_channels = (sum_squares_channels / num_pixels) - (mean_channels ** 2)
-print("Variance per channel:", var_channels)
-std_channels = np.sqrt(var_channels)
 # Print the results
 print("Mean per channel:", mean_channels)
+print("Variance per channel:", variance_channels)
 print("Standard deviation per channel:", std_channels)

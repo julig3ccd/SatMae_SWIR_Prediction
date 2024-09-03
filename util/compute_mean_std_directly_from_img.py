@@ -39,8 +39,9 @@ for image_name in tqdm(os.listdir(dataset_dir)):
 mean_channels = sum_channels / num_pixels
 
 # Compute the standard deviation for each channel
-std_channels = np.sqrt(sum_squares_channels / num_pixels - mean_channels ** 2)
-
+var_channels = (sum_squares_channels / num_pixels) - (mean_channels ** 2)
+print("Variance per channel:", var_channels)
+std_channels = np.sqrt(var_channels)
 # Print the results
 print("Mean per channel:", mean_channels)
 print("Standard deviation per channel:", std_channels)

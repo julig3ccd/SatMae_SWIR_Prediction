@@ -11,8 +11,10 @@ mean_channels = np.zeros(13, dtype=np.float64)
 M2_channels = np.zeros(13, dtype=np.float64)
 num_pixels = 0
 
+dir_list = os.listdir(dataset_dir)
+dir_list = dir_list.head(100)
 # Iterate over all images in the dataset
-for image_name in tqdm(os.listdir(dataset_dir)):
+for image_name in tqdm(dir_list):
     image_path = os.path.join(dataset_dir, image_name)
     
     # Open the image using rasterio

@@ -681,13 +681,13 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         # train transform
         interpol_mode = transforms.InterpolationMode.BICUBIC
 
-        if normalize_sentinel is None:
+        if normalize_sentinel == 'image':
             normalize_sentinel = SentinelNormalize_PerImage()
-        elif normalize_sentinel == 'dataset' and mean is None and std is None:
+        elif normalize_sentinel == 'dataset' and mean is not None and std is not None:
             normalize_sentinel = SentinelNormalize(mean, std)
         else:
             raise ValueError(f'Invalid combination for normalization: norm_method: {normalize_sentinel}, mean:{mean}, std:{std}')    
-        
+        #TODO actually use normalize_sentinel in the transform
         print("INPUT SIZE IN TRANSFORM: ",input_size)
 
         t = []
@@ -826,7 +826,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
             mean = SentinelIndividualImageDataset_OwnData.mean
             std = SentinelIndividualImageDataset_OwnData.std
 
-        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, normalize_sentinel='dataset')
+        transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, normalize_sentinel=args.normalize_sentinel, mean=mean, std=std)
         dataset = SentinelIndividualImageDataset_OwnData(directory_path, transform, masked_bands=args.masked_bands,
                                                  dropped_bands=args.dropped_bands, is_train=is_train)
 

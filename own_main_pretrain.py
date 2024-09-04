@@ -56,6 +56,7 @@ def get_args_parser():
                         help='Masking ratio (percentage of removed patches).')
     parser.add_argument('--spatial_mask', action='store_true', default=False,
                         help='Whether to mask all channels of a spatial location. Only for indp c model')
+    parser.add_argument('--normalize_sentinel', default='image', choices=['image', 'dataset'])
 
     parser.add_argument('--norm_pix_loss', action='store_true',
                         help='Use (per-patch) normalized pixels as targets for computing loss')

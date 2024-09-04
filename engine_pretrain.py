@@ -12,10 +12,10 @@ import wandb
 import util.misc as misc
 import util.lr_sched as lr_sched
 import os
-from util.print import save_comparison_fig_from_tensor
+from util.print import save_comparison_fig_from_tensor,save_input_output_fig
 
 @torch.no_grad()
-def evaluate(data_loader, model, device, print_comparison=False, args=None):
+def evaluate(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
     criterion = torch.nn.MSELoss()
@@ -73,10 +73,14 @@ def evaluate(data_loader, model, device, print_comparison=False, args=None):
                 #print("loss in autocast " , loss)    
 
         
-        if print_comparison:
+        if args.print_comparison:
               if idx % 100 == 0:
                 save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,num_channels=2,mask=mask,input=images)
-                print('saved comparison figures for batch ',idx)
+                print('saved swir comparison figures for batch ',idx)
+        if args.print_input: 
+            if idx % 100 == 0:
+                save_input_output_fig(final_swir_images=swirpred, name=f'input_output_fig_b_{idx}', target_images=swir_targets, num_channels=10, mask=mask, input=images)  
+                print('saved input output figures for batch ',idx)   
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)
 

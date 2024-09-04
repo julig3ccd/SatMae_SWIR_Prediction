@@ -62,7 +62,9 @@ def get_args_parser():
     parser.set_defaults(norm_pix_loss=False)
 
     parser.add_argument('--print_comparison', action='store_true', default=False)
-    
+
+    parser.add_argument('--print_input', action='store_true', default=False)
+
     parser.add_argument('--swir_only', action='store_true', default=False)
 
 

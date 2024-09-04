@@ -58,9 +58,14 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
     
         swir_output = create_swir_img_from_tensor(img)
 
-        input_g0 = get_masked_input_img_from_tensor(input[idx,[0,1,2]],mask=mask[0])
-        input_g1 = get_masked_input_img_from_tensor(input[idx,[3,4,5]],mask=mask[1])
-        input_g2 = get_masked_input_img_from_tensor(input[idx,[8,9]],mask=mask[2])
+        print("MASK SHAPE: ", mask.shape)
+        print("Mask idx shape: ", mask[idx].shape)
+        print("Mask idx shape[0]: ", mask[idx,0].shape)
+        
+
+        input_g0 = get_masked_input_img_from_tensor(input[idx,[0,1,2]],mask=mask[idx,0])
+        input_g1 = get_masked_input_img_from_tensor(input[idx,[3,4,5]],mask=mask[idx,1])
+        input_g2 = get_masked_input_img_from_tensor(input[idx,[8,9]],mask=mask[idx,2])
 
     
         swir_target = create_swir_img_from_tensor(target_images[idx]) #target still has 2 channels

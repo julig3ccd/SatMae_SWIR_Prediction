@@ -78,25 +78,30 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
         #     # masked_input=mask[idx,2,:].cpu().numpy()
         #     # masked_input = masked_input.reshape(12,12)
 
-    fig, ax = plt.subplots(2, 3, figsize=(15, 10))
+        fig, ax = plt.subplots(2, 3, figsize=(15, 10))
 
-    ax[0, 0].imshow(input_g2)
-    ax[0, 0].set_title('SWIR In')
+        ax[0, 0].imshow(input_g2)
+        ax[0, 0].set_title('SWIR In')
+        ax[0, 0].hide_axes()
 
-    ax[0,1].imshow(input_g1)
-    ax[0, 1].set_title('Group 1 In')
+        ax[0,1].imshow(input_g1)
+        ax[0, 1].set_title('Group 1 In')
+        ax[0, 1].hide_axes()
 
-    ax[0,2].imshow(input_g0)
-    ax[0,2].set_title('Group 0 In')
+        ax[0,2].imshow(input_g0)
+        ax[0,2].set_title('Group 0 In')
+        ax[0,2].hide_axes()
 
-    ax[1, 0].imshow(swir_output)
-    ax[1, 0].set_title('SWIR Out')
+        ax[1, 0].imshow(swir_output)
+        ax[1, 0].set_title('SWIR Out')
+        ax[1, 0].hide_axes()
 
-    ax[1, 1].imshow(swir_target)
-    ax[1, 1].set_title('SWIR Target')
-  
-    plt.savefig(f'imgOut/{name}_img_{idx}.png')
-    plt.close()
+        ax[1, 1].imshow(swir_target)
+        ax[1, 1].set_title('SWIR Target')
+        ax[1, 1].hide_axes()
+
+        plt.savefig(f'imgOut/{name}_img_{idx}.png')
+        plt.close()
 
 
 

@@ -344,7 +344,7 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
             for key in ['head.weight', 'head.bias']:
                 if key in checkpoint['model']:
                     del checkpoint['model'][key]
-            if args.input_size != 96 and args.model != 'mae_vit_base_patch16':   
+            if args.input_size != 96:   
                 print("Removing keys that cause error for img sizes other than 96 while using vit_base model") 
                 checkpoint=remove_mismatching_keys_for_new_img_size(checkpoint=checkpoint)
     

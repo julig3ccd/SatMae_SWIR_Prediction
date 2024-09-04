@@ -70,7 +70,7 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
         print("INPUT G0 SHAPE: ", input_g0.shape)
         print("INPUT G1 SHAPE: ", input_g1.shape)
         print("INPUT G2 SHAPE: ", input_g2.shape)
-        
+
         swir_target = create_swir_img_from_tensor(target_images[idx]) #target still has 2 channels
         
         # if mask is not None and input is not None:
@@ -82,11 +82,16 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
 
     ax[0, 0].imshow(input_g2)
     ax[0, 0].set_title('SWIR In')
-    ax[0,1].imshow(input_g1, 'Group 1 In')
-    ax[0,2].imshow(input_g0, 'Group 0 In')
-    
+
+    ax[0,1].imshow(input_g1)
+    ax[0, 1].set_title('Group 1 In')
+
+    ax[0,2].imshow(input_g0)
+    ax[0,2].set_title('Group 0 In')
+
     ax[1, 0].imshow(swir_output)
     ax[1, 0].set_title('SWIR Out')
+
     ax[1, 1].imshow(swir_target)
     ax[1, 1].set_title('SWIR Target')
   

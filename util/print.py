@@ -21,10 +21,6 @@ def create_swir_img_from_tensor(image):
         # Assign the blue channel to the third G0 channel
         np.copyto(stacked_image[:, :, 2], npimgtransposed[:,:,2])
         
-        np.copyto(stacked_image[:, :, 0], npimgtransposed[:,:,3])
-        np.copyto(stacked_image[:, :, 1], npimgtransposed[:,:,4])
-        np.copyto(stacked_image[:, :, 2], npimgtransposed[:,:,5])    
-
     return stacked_image
 
 def get_binary_mask_from_tensor(mask):  # mask shape: [3,144] - [Channel Groups, 12*12 patches] - [:,i] --> has 0 (keep) or 1 (masked)

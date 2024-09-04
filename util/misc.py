@@ -350,7 +350,7 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
     
         model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
         print("Resume checkpoint %s" % args.resume)
-        if 'optimizer' in checkpoint and 'epoch' in checkpoint and not (hasattr(args, 'eval') and args.eval):
+        if 'optimizer' in checkpoint and 'epoch' in checkpoint and not (hasattr(args, 'eval') and args.eval) and args.input_size == 96:
             optimizer.load_state_dict(checkpoint['optimizer'])
             ##TODO Verify : this could be the cause for the super low learning rate
             #args.start_epoch = checkpoint['epoch'] + 1

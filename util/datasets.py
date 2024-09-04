@@ -536,18 +536,33 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
     #        948.9819932 , 1108.06650639, 1258.36394548, 1233.1492281 ,
     #        1364.38688993,  472.37967789,   14.3114637 , 1310.36996126, 1087.6020813]
 
-    #TODO find actual mean and std of whole dataset
-    #THESE ARE SAMPLE MEAN TAKEN FROM A RANDOM SAMPLE OF THE DATASET
-    mean = [19341.930563417,18950.766933358,20234.736082853,
-        23012.623098615,22838.413733319,23510.608637122,
-        24812.46245672,25166.454818033,23460.14729204,
-        10566.06630054,6574.0671368182,29000.45147292,27132.710566171]
-    std = [2676.7161863997,2834.5211384799,656.94571681469,
-       1073.8175985678,2055.5142130795,2438.8438753817,
-       2394.7821948616,2258.8374305891,2177.200737971,
-       1968.0134869174,1631.6803124981,1444.3118720918,1946.2001274243]
+    # #THESE ARE SAMPLE MEAN TAKEN FROM A RANDOM SAMPLE OF THE DATASET
+    # mean = [19341.930563417,18950.766933358,20234.736082853,
+    #     23012.623098615,22838.413733319,23510.608637122,
+    #     24812.46245672,25166.454818033,23460.14729204,
+    #     10566.06630054,6574.0671368182,29000.45147292,27132.710566171]
+    # std = [2676.7161863997,2834.5211384799,656.94571681469,
+    #    1073.8175985678,2055.5142130795,2438.8438753817,
+    #    2394.7821948616,2258.8374305891,2177.200737971,
+    #    1968.0134869174,1631.6803124981,1444.3118720918,1946.2001274243]
 
-
+    meanTrain= [10385.85933387,  9797.53441058, 10346.85004955, 12467.9975321,
+                 13246.34282102, 15441.06004752, 16846.1904891,  17581.59016532,
+                 16164.77956691,  5878.16842383,  4404.56392499, 17690.18428354,
+                 14172.97919038]
+    stdTrain= [ 6137.80876457,  6275.319999  ,  7430.10024948, 10889.85980581,
+                 11086.07578933, 11567.63038008, 12401.60709494, 12783.72869867,
+                 11898.01670963,  4960.69235975, 12048.57802001, 15073.78268635,
+                 13161.42504152]
+    
+    meanVal= [10319.3762772 ,  9735.22693494, 10289.81899057, 12396.14333376,
+                13188.55490431, 15425.63926432, 16839.37402869, 17579.0248175,
+                16163.70053363,  5886.70459681,  4210.47752098, 17609.5507329,
+                14089.08075163]
+    stdVal= [ 6222.95627083,  6349.80665591,  7479.18364453, 10910.20957793,
+                11101.56215744, 11574.55018483, 12404.63197071, 12782.95526588,
+                11899.29000457,  4996.52724522, 11720.65489343, 15033.3288868,
+                13128.78798085]
 
     def __init__(self,
                  directory_path: str,
@@ -683,16 +698,18 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
 
         if normalize_sentinel == 'image':
             normalize_sentinel = SentinelNormalize_PerImage()
+            print("NORMALIZE DATA PER IMAGE")
         elif normalize_sentinel == 'dataset' and mean is not None and std is not None:
             normalize_sentinel = SentinelNormalize(mean, std)
+            print("NORMALIZE DATA PER DATASET")
         else:
             raise ValueError(f'Invalid combination for normalization: norm_method: {normalize_sentinel}, mean:{mean}, std:{std}')    
-        #TODO actually use normalize_sentinel in the transform
+        
         print("INPUT SIZE IN TRANSFORM: ",input_size)
 
         t = []
         if is_train:
-            t.append(SentinelNormalize_PerImage())  # use specific Sentinel normalization
+            t.append(normalize_sentinel)  # use specific Sentinel normalization either per picture or per dataset
             t.append(transforms.ToTensor())
             t.append(
                 transforms.RandomResizedCrop(input_size, scale=(0.2, 1.0), interpolation=interpol_mode),  # 3 is bicubic
@@ -710,7 +727,7 @@ class SentinelIndividualImageDataset_OwnData(SatelliteDataset):
         print("VAL IMAGES WILL BE RESIZED TO: ", size)
         print("AND CROPPED TO: ", input_size)
 
-        t.append(SentinelNormalize_PerImage())
+        t.append(normalize_sentinel)
         t.append(transforms.ToTensor())
         t.append(
             transforms.Resize(size, interpolation=interpol_mode),  # to maintain same ratio w.r.t. 224 images
@@ -823,9 +840,12 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
     elif args.dataset_type == 'sentinel_own_data': 
         
         mean, std = None, None
-        if args.normalize_sentinel == 'dataset':
-            mean = SentinelIndividualImageDataset_OwnData.mean
-            std = SentinelIndividualImageDataset_OwnData.std
+        if args.normalize_sentinel == 'dataset' and is_train:
+            mean = SentinelIndividualImageDataset_OwnData.meanTrain
+            std = SentinelIndividualImageDataset_OwnData.stdTrain
+        elif args.normalize_sentinel == 'dataset' and not is_train:
+            mean = SentinelIndividualImageDataset_OwnData.meanVal
+            std = SentinelIndividualImageDataset_OwnData.stdVal    
 
         transform = SentinelIndividualImageDataset_OwnData.build_transform(is_train, args.input_size, normalize_sentinel=args.normalize_sentinel, mean=mean, std=std)
         dataset = SentinelIndividualImageDataset_OwnData(directory_path, transform, masked_bands=args.masked_bands,

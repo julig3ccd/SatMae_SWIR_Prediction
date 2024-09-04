@@ -81,7 +81,7 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
         fig, ax = plt.subplots(2, 3, figsize=(15, 10))
 
         ax[0, 0].imshow(input_g2)
-        ax[0, 0].set_title('SWIR In')
+        ax[0, 0].set_title('SWIR (Group 2) In')
         ax[0, 0].axis('off')
 
         ax[0,1].imshow(input_g1)

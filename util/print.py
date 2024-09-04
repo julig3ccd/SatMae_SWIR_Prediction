@@ -67,7 +67,10 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
         input_g1 = get_masked_input_img_from_tensor(input[idx,[3,4,5]],mask=mask[idx,1])
         input_g2 = get_masked_input_img_from_tensor(input[idx,[8,9]],mask=mask[idx,2])
 
-    
+        print("INPUT G0 SHAPE: ", input_g0.shape)
+        print("INPUT G1 SHAPE: ", input_g1.shape)
+        print("INPUT G2 SHAPE: ", input_g2.shape)
+        
         swir_target = create_swir_img_from_tensor(target_images[idx]) #target still has 2 channels
         
         # if mask is not None and input is not None:

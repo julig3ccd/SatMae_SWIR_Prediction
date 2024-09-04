@@ -35,7 +35,7 @@ import models_vit
 
 from engine_finetune import (train_one_epoch, train_one_epoch_temporal)
 from util.pos_embed import interpolate_pos_embed
-from util.print import save_comparison_fig_from_tensor
+from util.print import save_swir_comparison_fig_from_tensor
 
 
 
@@ -72,7 +72,7 @@ def evaluate(data_loader, model, device, print_comparison=False):
         with torch.cuda.amp.autocast():
             output = model(images)
             if print_comparison:
-              save_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
+              save_swir_comparison_fig_from_tensor(output,target,f'comparison_fig_b_{idx}')
               print('saved comparison figures for batch ',idx)
             loss = criterion(output, target)
             #print("loss in autocast " , loss)

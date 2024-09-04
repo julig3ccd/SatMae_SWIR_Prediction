@@ -12,7 +12,7 @@ import wandb
 import util.misc as misc
 import util.lr_sched as lr_sched
 import os
-from util.print import save_comparison_fig_from_tensor,save_input_output_fig
+from util.print import save_swir_comparison_fig_from_tensor,save_input_output_fig
 
 @torch.no_grad()
 def evaluate(data_loader, model, device, args=None):
@@ -75,7 +75,7 @@ def evaluate(data_loader, model, device, args=None):
         
         if args.print_comparison:
               if idx % 100 == 0:
-                save_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,mask=mask,input=images)
+                save_swir_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,mask=mask,input=images)
                 print('saved swir comparison figures for batch ',idx)
         if args.print_input: 
             if idx % 100 == 0:

@@ -105,7 +105,7 @@ def save_input_output_fig(final_swir_images ,name , target_images , mask=None,in
 
 
 
-def save_comparison_fig_from_tensor(final_swir_images ,name , target_images=None, mask=None,input=None ):  # final_image shape: [8,2,96,96]
+def save_swir_comparison_fig_from_tensor(final_swir_images ,name , target_images=None, mask=None,input=None ):  # final_image shape: [8,2,96,96]
 
 
     
@@ -116,7 +116,7 @@ def save_comparison_fig_from_tensor(final_swir_images ,name , target_images=None
             target = create_swir_img_from_tensor(target_images[idx]) #target still has 2 channels
         
         if mask is not None:
-            masked_input=get_masked_input_img_from_tensor(input[idx],mask[idx])
+            masked_input=get_masked_input_img_from_tensor(input[idx],mask[idx,2]) #hand in swir mask only 
             # masked_input=mask[idx,2,:].cpu().numpy()
             # masked_input = masked_input.reshape(12,12)
 

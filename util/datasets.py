@@ -822,6 +822,7 @@ def build_fmow_dataset(is_train: bool, args) -> SatelliteDataset:
         args.nb_classes = NAIP_CLASS_NUM
     elif args.dataset_type == 'sentinel_own_data': 
         
+        mean, std = None, None
         if args.normalize_sentinel == 'dataset':
             mean = SentinelIndividualImageDataset_OwnData.mean
             std = SentinelIndividualImageDataset_OwnData.std

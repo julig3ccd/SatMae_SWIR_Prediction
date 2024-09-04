@@ -35,11 +35,11 @@ def get_masked_input_img_from_tensor(input,mask,group=2):  # input shape: [3,96,
     swir_input_full=create_swir_img_from_tensor(input) #shape [96,96,3]
     input_size = swir_input_full.shape[0]   
     if group == 2:
-        binary_mask = get_binary_mask_from_tensor(mask,group=2)               #shape [12,12]
+        binary_mask = get_binary_mask_from_tensor(mask)               #shape [12,12]
     elif group == 1: 
-        binary_mask = get_binary_mask_from_tensor(mask,group=1)  
+        binary_mask = get_binary_mask_from_tensor(mask)  
     elif group == 0:                                                             #shape [12,12]
-        binary_mask = get_binary_mask_from_tensor(mask,group=0)  
+        binary_mask = get_binary_mask_from_tensor(mask)  
 
     # resize the binary mask to [96, 96] (nearest-neighbor interpolation)
     resized_mask = resize(binary_mask, (input_size, input_size), order=0, preserve_range=True)

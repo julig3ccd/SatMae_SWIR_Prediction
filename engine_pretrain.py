@@ -75,11 +75,11 @@ def evaluate(data_loader, model, device, args=None):
         
         if args.print_comparison:
               if idx % 100 == 0:
-                save_swir_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}',target_images=swir_targets,mask=mask,input=images)
+                save_swir_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}_p_{args.patch_size}',target_images=swir_targets,mask=mask,input=images)
                 print('saved swir comparison figures for batch ',idx)
         if args.print_input: 
             if idx % 100 == 0:
-                save_input_output_fig(final_swir_images=swirpred, name=f'input_output_fig_b_{idx}', target_images=swir_targets, mask=mask, input=images)  
+                save_input_output_fig(final_swir_images=swirpred, name=f'input_output_fig_b_{idx}_p_{args.patch_size}', target_images=swir_targets, mask=mask, input=images)  
                 print('saved input output figures for batch ',idx)   
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         # print(acc1, acc5, flush=True)

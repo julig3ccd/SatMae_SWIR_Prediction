@@ -313,6 +313,8 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
         client_state = {'epoch': epoch}
         model.save_checkpoint(save_dir=args.output_dir, tag="checkpoint-%s" % epoch_name, client_state=client_state)
 
+    print("model path", f'{args.model}_{args.input_size}_p{args.patch_size}_e{epoch_name}.pth')    
+
 
 def remove_mismatching_keys_for_new_img_size(checkpoint):
     for key in ['head.weight',

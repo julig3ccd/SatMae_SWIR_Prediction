@@ -336,6 +336,7 @@ def remove_mismatching_keys_for_new_img_size(model, checkpoint):
                  ]:
                     if key in checkpoint_model and checkpoint_model[key].shape != state_dict[key].shape:
                         removedKeys.append(key)
+                        print("removing key", key, "because checkpoint shape", checkpoint_model[key].shape, "does not match model shape", state_dict[key].shape)
                         del checkpoint['model'][key] 
     return checkpoint , removedKeys                    
 

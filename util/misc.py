@@ -316,7 +316,9 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
     print("model path", f'{args.model}_{args.input_size}_p{args.patch_size}_e{epoch_name}.pth')    
 
 
-def remove_mismatching_keys_for_new_img_size(checkpoint):
+def remove_mismatching_keys_for_new_img_size(model, checkpoint):
+    state_dict = model.state_dict()
+    removedKeys =[]
     for key in ['head.weight',
                  'head.bias',
                  'pos_embed',
@@ -331,9 +333,10 @@ def remove_mismatching_keys_for_new_img_size(checkpoint):
                  'decoder_pred.2.weight',
                  'decoder_pred.2.bias',
                  ]:
-                    if key in checkpoint['model']:
+                    if key in checkpoint['model'] and checkpoint[key].shape != state_dict[key].shape:
+                        removedKeys.append(key)
                         del checkpoint['model'][key] 
-    return checkpoint                    
+    return checkpoint , removedKeys                    
 
 def load_model(args, model_without_ddp, optimizer, loss_scaler):
     if args.resume:
@@ -347,8 +350,9 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
                 if key in checkpoint['model']:
                     del checkpoint['model'][key]
             if args.input_size != 96:   
-                print("Removing keys that cause error for img sizes other than 96 while using vit_base model") 
-                checkpoint=remove_mismatching_keys_for_new_img_size(checkpoint=checkpoint)
+                checkpoint, removedKeys =remove_mismatching_keys_for_new_img_size(model=model_without_ddp, checkpoint=checkpoint)
+                print(f"Removed keys {removedKeys} from checkpoint because of size mismatch") 
+
     
         model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
         print("Resume checkpoint %s" % args.resume)

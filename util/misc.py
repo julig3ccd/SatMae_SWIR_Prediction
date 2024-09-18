@@ -318,6 +318,7 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
 
 def remove_mismatching_keys_for_new_img_size(model, checkpoint):
     state_dict = model.state_dict()
+    checkpoint_model = checkpoint['model']
     removedKeys =[]
     for key in ['head.weight',
                  'head.bias',
@@ -333,7 +334,7 @@ def remove_mismatching_keys_for_new_img_size(model, checkpoint):
                  'decoder_pred.2.weight',
                  'decoder_pred.2.bias',
                  ]:
-                    if key in checkpoint['model'] and checkpoint[key].shape != state_dict[key].shape:
+                    if key in checkpoint_model and checkpoint_model[key].shape != state_dict[key].shape:
                         removedKeys.append(key)
                         del checkpoint['model'][key] 
     return checkpoint , removedKeys                    

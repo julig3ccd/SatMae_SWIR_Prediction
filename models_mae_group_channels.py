@@ -192,7 +192,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     
     
     #TODO see if this works with eval
-    def center_masking(x, mask_ratio):
+    def center_swir_masking(x, mask_ratio):
         """
         Perform center masking, leaving a border around the image.
         
@@ -285,11 +285,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             mask = mask.repeat(1, G)  # (N, G*L)
             mask = mask.view(b, G, L)
         elif swir_only and center_mask:
+            print("masking center of swir")
             #TODO mask only swir not the other patches (see if slicing of 2nd dim works)
             # 1. only hand in swir group to center masking
-            x_swir, mask, ids_restore = self.center_masking(x, mask_ratio)
+            x, mask, ids_restore = self.center_swir_masking(x, mask_ratio)
             # 2. replace swir group with masked swir group
-            x[:,2:,:] = x_swir
+            #x[:,2:,:] = x_swir
             mask = mask.view(b, G, L)
         else:
             # Independently mask each channel (i.e. spatial location has subset of channels visible)

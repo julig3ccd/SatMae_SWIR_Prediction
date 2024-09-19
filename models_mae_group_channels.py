@@ -189,6 +189,60 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         mask = torch.gather(mask, dim=1, index=ids_restore)
 
         return x_masked, mask, ids_restore
+    
+    
+    #TODO see if this works with eval
+    def center_masking(x, mask_ratio):
+        """
+        Perform center masking, leaving a border around the image.
+        
+        x: [N, G, L, D], input tensor where:
+            N: Batch size
+            G: group of channels
+            L: sequence length (total number of patches, assumed to be square)
+            D: dimension of each patch
+        mask_ratio: ratio of masked center patches to remaining border patches (e.g., 0.6 will mask 60% of the center patches, leaving a 15% border around the image).
+        """
+        N, G, L, D = x.shape
+
+        # Reshape L into square dimensions (H x W) where H == W
+        H = int(L ** 0.5)
+        assert H * H == L, "Sequence length must be a perfect square"
+
+        # Reshape the tensor to have explicit height and width: (N, G, H, W, D)
+        x = x.view(N, G, H, H, D)
+
+        # Determine how much of the center to mask, and how much of the border to keep
+        mask_ratio_per_axis = mask_ratio / 2  # Split mask_ratio evenly across both axes
+
+        border_h = int(H * mask_ratio_per_axis)  # Border height patches to keep
+        border_w = border_h  # Since height == width
+
+        # Calculate the indices for the center region to mask
+        mask_h_start = border_h
+        mask_h_end = H - border_h
+        mask_w_start = border_w
+        mask_w_end = H - border_w
+
+        # Create a binary mask: 0 for border patches to keep, 1 for center patches to mask
+        mask = torch.zeros(N, G, H, H, device=x.device)
+        mask[:, :, mask_h_start:mask_h_end, mask_w_start:mask_w_end] = 1
+
+        # Expand the mask to match the shape of x_masked (i.e., along dimension D)
+        mask = mask.unsqueeze(-1).expand_as(x)  # Now mask has shape [N, G, H, H, D]
+
+        # Apply the mask to the input tensor (mask center, keep border)
+        x_masked = x.clone()
+        x_masked[mask == 1] = 0  # Apply the mask
+
+        # Reshape x_masked back to [N, G, L, D]
+        x_masked = x_masked.view(N, G, L, D)
+
+        # Generate ids_restore (to restore the original order if necessary)
+        ids_restore = torch.arange(L, device=x.device).view(1, L).repeat(N, 1)
+
+        return x_masked, mask.view(N, G, L), ids_restore
+
 
     def forward_encoder(self, x, mask_ratio):
         # x is (N, C, H, W)
@@ -220,6 +274,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             x, mask, ids_restore = self.random_masking(x, mask_ratio)  # (N, 0.25*L, G*D)
             x = x.view(b, x.shape[1], G, D).permute(0, 2, 1, 3).reshape(b, -1, D)  # (N, 0.25*G*L, D)
             mask = mask.repeat(1, G)  # (N, G*L)
+            mask = mask.view(b, G, L)
+        elif self.swir_only and self.center_mask:
+            #TODO mask only swir not the other patches (see if slicing of 2nd dim works)
+            # 1. only hand in swir group to center masking
+            x_swir, mask, ids_restore = self.center_masking(x[:,2:,:], mask_ratio)
+            # 2. replace swir group with masked swir group
+            x[:,2:,:] = x_swir
             mask = mask.view(b, G, L)
         else:
             # Independently mask each channel (i.e. spatial location has subset of channels visible)
@@ -375,9 +436,13 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             print("in case of removed patches!== 0")
             for i, group in enumerate(self.channel_groups):
                 group_loss = loss[:, group, :].mean(dim=1)  # (N, L)
-                total_loss += (group_loss * mask[:, i]).sum()
+                total_loss += (group_loss * mask[:, i]).sum() #0 is kept patches, so loss should be 0 if no patches are masked
+                #only for debugging remove print once loss is verified
+                if i == 0:
+                    print("summed group loss on mask", (group_loss * mask[:, i]).sum())
+                
                 num_removed += mask[:, i].sum()  # mean loss on removed patches
-                print ("num removed: ", num_removed)
+                print ("num removed in group ",i," : ", num_removed)
 
             return total_loss / num_removed
 

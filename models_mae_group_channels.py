@@ -244,7 +244,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         return x_masked, mask.view(N, G, L), ids_restore
 
 
-    def forward_encoder(self, x, mask_ratio):
+    def forward_encoder(self, x, mask_ratio, swir_only, center_mask):
         # x is (N, C, H, W)
         b, c, h, w = x.shape
 
@@ -275,7 +275,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             x = x.view(b, x.shape[1], G, D).permute(0, 2, 1, 3).reshape(b, -1, D)  # (N, 0.25*G*L, D)
             mask = mask.repeat(1, G)  # (N, G*L)
             mask = mask.view(b, G, L)
-        elif self.swir_only and self.center_mask:
+        elif swir_only and center_mask:
             #TODO mask only swir not the other patches (see if slicing of 2nd dim works)
             # 1. only hand in swir group to center masking
             x_swir, mask, ids_restore = self.center_masking(x[:,2:,:], mask_ratio)
@@ -451,8 +451,8 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
             return total_loss / num_removed
 
     #targets are not None if loss on swir should be computed for fully masked input swir
-    def forward(self, imgs, swir_only=False, targets=None, mask_ratio=0.75):
-        latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
+    def forward(self, imgs, swir_only=False, center_mask=False, targets=None, mask_ratio=0.75):
+        latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio,swir_only,center_mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         
         if swir_only==True and targets is not None:

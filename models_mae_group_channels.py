@@ -192,7 +192,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
     
     
     #TODO see if this works with eval
-    def center_swir_masking(x, mask_ratio):
+    def center_swir_masking(self, x, mask_ratio):
         """
         Perform center masking, leaving a border around the image.
         
@@ -462,7 +462,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
     #targets are not None if loss on swir should be computed for fully masked input swir
     def forward(self, imgs, swir_only=False, center_mask=False, targets=None, mask_ratio=0.75):
-        latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio,swir_only,center_mask)
+        latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio, swir_only, center_mask)
         pred = self.forward_decoder(latent, ids_restore)  # [N, C, L, p*p]
         
         if swir_only==True and targets is not None:

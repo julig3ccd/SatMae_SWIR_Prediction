@@ -226,7 +226,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
         # Create a binary mask: 0 for border patches to keep, 1 for center patches to mask
         mask = torch.zeros(N, G, H, H, device=x.device)
-        mask[:, :, mask_h_start:mask_h_end, mask_w_start:mask_w_end] = 1
+        #only mask in group 2 (swir)
+        mask[:, 2, mask_h_start:mask_h_end, mask_w_start:mask_w_end] = 1
+        print("bin mask shape", mask.shape)
+        print("bin mask", mask[0,0,:,:])
 
         # Expand the mask to match the shape of x_masked (i.e., along dimension D)
         mask = mask.unsqueeze(-1).expand_as(x)  # Now mask has shape [N, G, H, H, D]
@@ -237,6 +240,12 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
 
         # Reshape x_masked back to [N, G, L, D]
         x_masked = x_masked.view(N, G, L, D)
+
+
+        print("x_masked shape", x_masked.shape)
+        print("masked group 0", x_masked[0,0,:,:])
+        print("masked group 1", x_masked[0,1,:,:])
+        print("masked group 2", x_masked[0,2,:,:])
 
         # Generate ids_restore (to restore the original order if necessary)
         ids_restore = torch.arange(L, device=x.device).view(1, L).repeat(N, 1)
@@ -278,7 +287,7 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         elif swir_only and center_mask:
             #TODO mask only swir not the other patches (see if slicing of 2nd dim works)
             # 1. only hand in swir group to center masking
-            x_swir, mask, ids_restore = self.center_masking(x[:,2:,:], mask_ratio)
+            x_swir, mask, ids_restore = self.center_masking(x, mask_ratio)
             # 2. replace swir group with masked swir group
             x[:,2:,:] = x_swir
             mask = mask.view(b, G, L)

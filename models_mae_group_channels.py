@@ -413,10 +413,10 @@ class MaskedAutoencoderGroupChannelViT(nn.Module):
         
 
         #check once if there are any removed patches to decide how loss should be comp (avoid NaN Loss for masking no patches)
-        print("mask sum: ", mask.sum())
-        print("mask sum 0", mask[:,0].sum())
-        print("mask sum 1", mask[:,1].sum())
-        print("mask sum 2", mask[:,2].sum())
+        # print("mask sum: ", mask.sum())
+        # print("mask sum 0", mask[:,0].sum())
+        # print("mask sum 1", mask[:,1].sum())
+        # print("mask sum 2", mask[:,2].sum())
 
         num_removed += mask.sum()
         if num_removed == 0 and swir_only==True:

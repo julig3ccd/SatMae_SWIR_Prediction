@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.ops import deform_conv2d
-from dcn import DeformableConv2d
 
 class double_conv(nn.Module):
     """(conv => BN => ReLU) * 2"""

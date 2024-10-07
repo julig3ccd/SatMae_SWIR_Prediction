@@ -260,6 +260,7 @@ def main(args):
 
         else:
             test_stats=evaluate(data_loader=data_loader_val, model=model,device=device,args=args)    
+        
         print("TEST STATS: ",test_stats)
         print("exit because eval mode only is set")
         exit(0)

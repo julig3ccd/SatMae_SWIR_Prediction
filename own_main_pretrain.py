@@ -244,7 +244,7 @@ def main(args):
     print(optimizer)
     loss_scaler = NativeScaler()
 
-    if args.model_type is not 'shallow_unet':
+    if args.model_type != 'shallow_unet':
         misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
 
     # Set up wandb

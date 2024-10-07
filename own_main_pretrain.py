@@ -207,7 +207,7 @@ def main(args):
                                                                norm_pix_loss=args.norm_pix_loss)
     elif args.model_type == 'shallow_unet':
         model = unet.ShallowUNet(n_channels=10, n_classes=2).float()
-        model.load_state_dict(torch.load("model_clng_8_256.pt"))
+        model.load_state_dict(torch.load(args.resume))
         print("Selected Shallow Unet and loaded checkpoint model_clng_8_256.pt")
     
     elif args.model_type == 'temporal':

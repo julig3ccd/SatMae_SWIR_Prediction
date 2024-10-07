@@ -30,7 +30,9 @@ import models_mae
 import models_mae_group_channels
 import models_mae_temporal
 
-from engine_pretrain import train_one_epoch, train_one_epoch_temporal, evaluate
+from engine_pretrain import train_one_epoch, train_one_epoch_temporal, evaluate, evaluateUNET
+
+import unet as unet
 
 
 def get_args_parser():
@@ -203,6 +205,11 @@ def main(args):
                                                                channel_groups=args.grouped_bands,
                                                                spatial_mask=args.spatial_mask,
                                                                norm_pix_loss=args.norm_pix_loss)
+    elif args.model_type == 'shallow_unet':
+        model = unet.ShallowUNet(n_channels=10, n_classes=2).float()
+        model.load_state_dict(torch.load("model_clng_8_256.pt"))
+        print("Selected Shallow Unet and loaded checkpoint model_clng_8_256.pt")
+    
     elif args.model_type == 'temporal':
         model = models_mae_temporal.__dict__[args.model](norm_pix_loss=args.norm_pix_loss)
     # non-spatial, non-temporal
@@ -237,7 +244,8 @@ def main(args):
     print(optimizer)
     loss_scaler = NativeScaler()
 
-    misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
+    if args.model_type is not 'shallow_unet':
+        misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
 
     # Set up wandb
     if global_rank == 0 and args.wandb is not None:
@@ -246,7 +254,12 @@ def main(args):
         wandb.watch(model)
 
     if args.eval:
-        test_stats=evaluate(data_loader=data_loader_val, model=model,device=device,args=args)    
+        if args.model_type == 'shallow_unet':
+            print("starting eval for shallow unet")
+            test_stats=evaluateUNET(data_loader=data_loader_val, model=model,device=device,args=args)    
+
+        else:
+            test_stats=evaluate(data_loader=data_loader_val, model=model,device=device,args=args)    
         print("TEST STATS: ",test_stats)
         print("exit because eval mode only is set")
         exit(0)
@@ -258,7 +271,6 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
-
         if args.model_type == 'temporal':
             train_stats = train_one_epoch_temporal(
                 model, data_loader_train,

@@ -96,6 +96,88 @@ def evaluate(data_loader, model, device, args=None):
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
+@torch.no_grad()
+def evaluateUNET(data_loader, model, device, args=None):
+    
+##### 1.rewrite criterion to mean squared error
+    criterion = torch.nn.MSELoss()
+
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    header = 'Test:'
+    i_size = args.input_size
+    p_size = args.patch_size
+    num_patches_per_axis = (i_size // p_size)
+    # switch to evaluation mode
+    #TODO see if mae even has .eval()
+    #model.eval()
+
+    for idx, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
+#####2. provide images with cropped swir channels as input        
+        images = batch[0]
+        if idx==0:
+            inputswir = images[0,[8,9],:,:]   # first image of batch, only swir channels, all spatial dimensions
+            print("THESE ARE THE SWIR CHANNELS IN THE INPUT: ", inputswir)
+
+
+##### 3. provide real swir channel as target (pbbly rewrite the dataloader to provide the right target)
+
+        swir_targets = batch[-1]
+        images = images.to(device, non_blocking=True)
+        swir_targets = swir_targets.to(device, non_blocking=True)
+        #print("INPUT SHAPE IN EVALUATE: ", images.shape)
+
+        # print("before pass model")
+        # compute output
+        with torch.cuda.amp.autocast():
+            pred = model(images)
+            print("PRED SHAPE: ", pred.shape) #--> ([16, 10, 144, 64]) [Batch, Channels, SeqLen, p^2]
+            #reshape predition to make it comparable to target swir
+            if args.swir_only:
+                # b_size = pred.shape[0]
+                # #tokens -> patches
+                # swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
+                # swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
+                # #patches -> image
+                # swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size) #(Batch , Channels(2) ,Height,Width)
+                #not needed anymore bc of changed model output ->
+                #full image -> only swir channels
+                loss = criterion(pred, swir_targets)
+                #print("loss in autocast " , loss)
+            else: 
+                b_size = pred.shape[0]
+                #tokens -> patches
+                swirpred = pred.view(b_size,pred.shape[1],num_patches_per_axis,num_patches_per_axis,p_size,p_size)
+                swirpred = swirpred.permute(0, 1, 2, 4, 3, 5).contiguous()
+                #patches -> image
+                swirpred = swirpred.view(b_size,pred.shape[1],i_size,i_size)
+                swir_only_pred = swirpred[:,[8,9],:,:]
+                loss = criterion(swir_only_pred, swir_targets)
+                #print("loss in autocast " , loss)    
+
+        
+        # if args.print_comparison:
+        #       if idx % 100 == 0:
+        #         save_swir_comparison_fig_from_tensor(swirpred,f'eval_comparison_fig_b_{idx}_p_{args.patch_size}',target_images=swir_targets,mask=mask,input=images)
+        #         print('saved swir comparison figures for batch ',idx)
+        # if args.print_input: 
+        #     if idx % 100 == 0:
+        #         save_input_output_fig(final_swir_images=swirpred, name=f'input_output_fig_b_{idx}_p_{args.patch_size}', target_images=swir_targets, mask=mask, input=images)  
+        #         print('saved input output figures for batch ',idx)   
+        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        # print(acc1, acc5, flush=True)
+
+        batch_size = images.shape[0]
+        metric_logger.update(loss=loss.item())
+        # print(min_mse_per_batch(output, target))
+        # metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
+        # metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+    # gather the stats from all processes
+    #metric_logger.synchronize_between_processes()
+    # print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
+    #       .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
 
 def train_one_epoch(model: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,

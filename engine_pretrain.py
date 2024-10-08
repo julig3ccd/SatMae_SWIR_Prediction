@@ -20,7 +20,7 @@ from torchmetrics.functional import structural_similarity_index_measure as ssim
 def evaluate(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
-    criterion = ssim()
+    criterion = ssim
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'
@@ -102,7 +102,7 @@ def evaluate(data_loader, model, device, args=None):
 def evaluateUNET(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
-    criterion = ssim()
+    criterion = ssim
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'
@@ -144,7 +144,7 @@ def evaluateUNET(data_loader, model, device, args=None):
                 #not needed anymore bc of changed model output ->
                 #full image -> only swir channels
                 loss = criterion(pred, swir_targets)
-                #print("loss in autocast " , loss)
+                print("loss in autocast " , loss)
             else: 
                 b_size = pred.shape[0]
                 #tokens -> patches
@@ -155,6 +155,7 @@ def evaluateUNET(data_loader, model, device, args=None):
                 swir_only_pred = swirpred[:,[8,9],:,:]
                 loss = criterion(swir_only_pred, swir_targets)
                 #print("loss in autocast " , loss)    
+
 
         
         if args.print_comparison:

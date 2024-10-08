@@ -45,7 +45,6 @@ def get_masked_input_img_from_tensor(input,mask,group=2):  # input shape: [3,96,
     resized_mask = resize(binary_mask, (input_size, input_size), order=0, preserve_range=True)
 
     # Apply the resized mask to the image
-    # Remember, zeros are 'keep', so no need to invert the mask
     masked_image = swir_input_full * (1 - resized_mask[..., np.newaxis])  # invert and Apply the mask across all channels
 
     return masked_image

@@ -13,12 +13,14 @@ import util.misc as misc
 import util.lr_sched as lr_sched
 import os
 from util.print import save_swir_comparison_fig_from_tensor,save_input_output_fig
+from torchmetrics.functional import structural_similarity_index_measure as ssim
+
 
 @torch.no_grad()
 def evaluate(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
-    criterion = torch.nn.MSELoss()
+    criterion = ssim()
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'
@@ -100,7 +102,7 @@ def evaluate(data_loader, model, device, args=None):
 def evaluateUNET(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
-    criterion = torch.nn.MSELoss()
+    criterion = ssim()
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'

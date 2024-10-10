@@ -20,7 +20,7 @@ from torchmetrics.functional import structural_similarity_index_measure as ssim
 def evaluate(data_loader, model, device, args=None):
     
 ##### 1.rewrite criterion to mean squared error
-    criterion = ssim
+    criterion = torch.nn.MSELoss()
 
     metric_logger = misc.MetricLogger(delimiter="  ")
     header = 'Test:'
